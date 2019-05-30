@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="monitor,metric,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介metrics让你以非并行的视角看到你的代码做了什么，给你强大的工具箱衡量生产环境中关键组件的行为。 使用通用库，例如Jetty, Logback, Log4j, Apache HttpClient, Ehcache, JDBI, Jersey，报告给Graphite，metrics给你全栈的可视化。 Metrics Core mertic 注册 5 metric types: Gauges">
+<meta name="keywords" content="monitor,metric">
+<meta property="og:type" content="article">
+<meta property="og:title" content="metrics度量">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/23/metrics/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="简介metrics让你以非并行的视角看到你的代码做了什么，给你强大的工具箱衡量生产环境中关键组件的行为。 使用通用库，例如Jetty, Logback, Log4j, Apache HttpClient, Ehcache, JDBI, Jersey，报告给Graphite，metrics给你全栈的可视化。 Metrics Core mertic 注册 5 metric types: Gauges">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/23/metrics/metric-types.jpg">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/23/metrics/metrics-reservoir.jpg">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/23/metrics/metrics-reports.jpg">
+<meta property="og:updated_time" content="2019-05-25T04:58:05.617Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="metrics度量">
+<meta name="twitter:description" content="简介metrics让你以非并行的视角看到你的代码做了什么，给你强大的工具箱衡量生产环境中关键组件的行为。 使用通用库，例如Jetty, Logback, Log4j, Apache HttpClient, Ehcache, JDBI, Jersey，报告给Graphite，metrics给你全栈的可视化。 Metrics Core mertic 注册 5 metric types: Gauges">
+<meta name="twitter:image" content="https://dydeve.github.io/2019/05/23/metrics/metric-types.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/23/metrics/">
+
+
+
+
+
+  <title>metrics度量 | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/23/metrics/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">metrics度量</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-23T15:49:19+08:00">
+                2019-05-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/util/" itemprop="url" rel="index">
+                    <span itemprop="name">util</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p><a href="https://metrics.dropwizard.io" target="_blank" rel="noopener">metrics</a>让你以非并行的视角看到你的代码做了什么，给你强大的工具箱衡量生产环境中关键组件的行为。</p>
+<p>使用通用库，例如<code>Jetty, Logback, Log4j, Apache HttpClient, Ehcache, JDBI, Jersey</code>，报告给<code>Graphite</code>，metrics给你全栈的可视化。</p>
+<h3 id="Metrics-Core"><a href="#Metrics-Core" class="headerlink" title="Metrics Core"></a>Metrics Core</h3><ul>
+<li>mertic 注册</li>
+<li>5 metric types: Gauges, Counters, Histograms, Meters, and Timers.</li>
+<li>报告度量值，via JMX,console,log,csv</li>
+</ul>
+<h4 id="Metric-Registries"><a href="#Metric-Registries" class="headerlink" title="Metric Registries"></a>Metric Registries</h4><p>度量注册的主类是<code>MetricRegistry</code>,所有metric实例的注册服务。通常，一个应用一个MetricRegistry，(spark每个<code>source</code>一个registry，如DAGSchedulerSource)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MetricRegistry</span> <span class="keyword">implements</span> <span class="title">MetricSet</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 以.相连</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">name</span><span class="params">(String name, String... names)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> StringBuilder builder = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">        append(builder, name);</span><br><span class="line">        <span class="keyword">if</span> (names != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (String s : names) &#123;</span><br><span class="line">                append(builder, s);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> builder.toString();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">name</span><span class="params">(Class&lt;?&gt; klass, String... names)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name(klass.getName(), names);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">append</span><span class="params">(StringBuilder builder, String part)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (part != <span class="keyword">null</span> &amp;&amp; !part.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (builder.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                builder.append(<span class="string">'.'</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            builder.append(part);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;String, Metric&gt; metrics;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;MetricRegistryListener&gt; listeners;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MetricRegistry</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.metrics = buildMap();</span><br><span class="line">        <span class="keyword">this</span>.listeners = <span class="keyword">new</span> CopyOnWriteArrayList&lt;MetricRegistryListener&gt;();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Given a &#123;<span class="doctag">@link</span> Metric&#125;, registers it under the given name.</span></span><br><span class="line"><span class="comment">     * 以&lt;name, metric&gt;的形式，插入metrics</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> name   the name of the metric</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> metric the metric</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> &lt;T&gt;    the type of the metric</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> &#123;<span class="doctag">@code</span> metric&#125;</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> IllegalArgumentException if the name is already registered</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="keyword">public</span> &lt;T extends Metric&gt; <span class="function">T <span class="title">register</span><span class="params">(String name, T metric)</span> <span class="keyword">throws</span> IllegalArgumentException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (metric <span class="keyword">instanceof</span> MetricSet) &#123;</span><br><span class="line">            registerAll(name, (MetricSet) metric);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">final</span> Metric existing = metrics.putIfAbsent(name, metric);</span><br><span class="line">            <span class="keyword">if</span> (existing == <span class="keyword">null</span>) &#123;</span><br><span class="line">                onMetricAdded(name, metric);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"A metric named "</span> + name + <span class="string">" already exists"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> metric;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Given a metric set, registers them.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> metrics    a set of metrics</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> IllegalArgumentException if any of the names are already registered</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerAll</span><span class="params">(MetricSet metrics)</span> <span class="keyword">throws</span> IllegalArgumentException </span>&#123;</span><br><span class="line">        registerAll(<span class="keyword">null</span>, metrics);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">registerAll</span><span class="params">(String prefix, MetricSet metrics)</span> <span class="keyword">throws</span> IllegalArgumentException </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;String, Metric&gt; entry : metrics.getMetrics().entrySet()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (entry.getValue() <span class="keyword">instanceof</span> MetricSet) &#123;</span><br><span class="line">                registerAll(name(prefix, entry.getKey()), (MetricSet) entry.getValue());</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                register(name(prefix, entry.getKey()), entry.getValue());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Map&lt;String, Metric&gt; <span class="title">getMetrics</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Collections.unmodifiableMap(metrics);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Return the &#123;<span class="doctag">@link</span> Counter&#125; registered under this name; or create and register </span></span><br><span class="line"><span class="comment">     * a new &#123;<span class="doctag">@link</span> Counter&#125; if none is registered.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> name the name of the metric</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> a new or pre-existing &#123;<span class="doctag">@link</span> Counter&#125;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Counter <span class="title">counter</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> getOrAdd(name, MetricBuilder.COUNTERS);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// histogram(String name) meter(String name) timer(String name)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> &lt;T extends Metric&gt; <span class="function">T <span class="title">getOrAdd</span><span class="params">(String name, MetricBuilder&lt;T&gt; builder)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> Metric metric = metrics.get(name);</span><br><span class="line">        <span class="keyword">if</span> (builder.isInstance(metric)) &#123;</span><br><span class="line">            <span class="keyword">return</span> (T) metric;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (metric == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> register(name, builder.newMetric());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalArgumentException e) &#123;</span><br><span class="line">                <span class="keyword">final</span> Metric added = metrics.get(name);</span><br><span class="line">                <span class="keyword">if</span> (builder.isInstance(added)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> (T) added;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(name + <span class="string">" is already used for a different type of metric"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * A quick and easy way of capturing the notion of default metrics.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">MetricBuilder</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Metric</span>&gt; </span>&#123;</span><br><span class="line">        MetricBuilder&lt;Counter&gt; COUNTERS = <span class="keyword">new</span> MetricBuilder&lt;Counter&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Counter <span class="title">newMetric</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> Counter();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isInstance</span><span class="params">(Metric metric)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> Counter.class.isInstance(metric);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// METERS Timer</span></span><br><span class="line"></span><br><span class="line">        MetricBuilder&lt;Histogram&gt; HISTOGRAMS = <span class="keyword">new</span> MetricBuilder&lt;Histogram&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Histogram <span class="title">newMetric</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> Histogram(<span class="keyword">new</span> ExponentiallyDecayingReservoir());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isInstance</span><span class="params">(Metric metric)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> Histogram.class.isInstance(metric);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="function">T <span class="title">newMetric</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">boolean</span> <span class="title">isInstance</span><span class="params">(Metric metric)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>省略了监听器相关代码，因为比较简单，且不是重点。</p>
+<h4 id="5-metric-types"><a href="#5-metric-types" class="headerlink" title="5 metric types"></a>5 metric types</h4><p><img src="//dydeve.github.io/2019/05/23/metrics/metric-types.jpg" alt=""></p>
+<h5 id="Gauge"><a href="#Gauge" class="headerlink" title="Gauge"></a>Gauge</h5><p>即时读取特定的值(an instantaneous reading of a particular value)<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Gauge</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">Metric</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns the metric's current value.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> the metric's current value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">T <span class="title">getValue</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>example:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> Queue&lt;String&gt; queue = <span class="keyword">new</span> ConcurrentLinkedQueue&lt;String&gt;();</span><br><span class="line"><span class="keyword">final</span> Gauge&lt;Integer&gt; queueDepth = <span class="keyword">new</span> Gauge&lt;Integer&gt;() &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Integer <span class="title">getValue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> queue.size();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>Gauge有几个实现类:<code>RatioGauge</code>,<code>JmxAttributeGauge</code>,<code>DerivativeGauge</code><br>以CachedGauge为例,可用于耗时的操作<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">CachedGauge</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">Gauge</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Clock clock;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AtomicLong reloadAt;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> timeoutNS;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> T value;<span class="comment">// 缓存</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new cached gauge with the given timeout period.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> timeout        the timeout</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> timeoutUnit    the unit of &#123;<span class="doctag">@code</span> timeout&#125;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">CachedGauge</span><span class="params">(<span class="keyword">long</span> timeout, TimeUnit timeoutUnit)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(Clock.defaultClock(), timeout, timeoutUnit);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new cached gauge with the given clock and timeout period.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> clock          the clock used to calculate the timeout</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> timeout        the timeout</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> timeoutUnit    the unit of &#123;<span class="doctag">@code</span> timeout&#125;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">CachedGauge</span><span class="params">(Clock clock, <span class="keyword">long</span> timeout, TimeUnit timeoutUnit)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.clock = clock;</span><br><span class="line">        <span class="keyword">this</span>.reloadAt = <span class="keyword">new</span> AtomicLong(<span class="number">0</span>);</span><br><span class="line">        <span class="keyword">this</span>.timeoutNS = timeoutUnit.toNanos(timeout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Loads the value and returns it.</span></span><br><span class="line"><span class="comment">     * 更新缓存</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> the new value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> T <span class="title">loadValue</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">getValue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (shouldLoad()) &#123;</span><br><span class="line">            <span class="keyword">this</span>.value = loadValue();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> value;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">shouldLoad</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">long</span> time = clock.getTick();</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">long</span> current = reloadAt.get();</span><br><span class="line">            <span class="keyword">if</span> (current &gt; time) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (reloadAt.compareAndSet(current, time + timeoutNS)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="Counter"><a href="#Counter" class="headerlink" title="Counter"></a><a href="#" name="counter">Counter</a></h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An incrementing and decrementing counter metric.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Counter</span> <span class="keyword">implements</span> <span class="title">Metric</span>, <span class="title">Counting</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> LongAdderAdapter count;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Counter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.count = LongAdderProxy.create();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Increment the counter by one.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">inc</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        inc(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Increment the counter by &#123;<span class="doctag">@code</span> n&#125;.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> n the amount by which the counter will be increased</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">inc</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">        count.add(n);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Decrement the counter by one.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dec</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        dec(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Decrement the counter by &#123;<span class="doctag">@code</span> n&#125;.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> n the amount by which the counter will be decreased</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dec</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">        count.add(-n);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns the counter's current value.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> the counter's current value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getCount</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> count.sum();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="Histogram"><a href="#Histogram" class="headerlink" title="Histogram"></a>Histogram</h5><p>直方图,度量数据流的分布<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * A metric which calculates the distribution of a value.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> &lt;a href="http://www.johndcook.com/standard_deviation.html"&gt;Accurately computing running</span></span><br><span class="line"><span class="comment"> *      variance&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Histogram</span> <span class="keyword">implements</span> <span class="title">Metric</span>, <span class="title">Sampling</span>, <span class="title">Counting</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Reservoir reservoir;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> LongAdderAdapter count;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new &#123;<span class="doctag">@link</span> Histogram&#125; with the given reservoir.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> reservoir the reservoir to create a histogram from</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Histogram</span><span class="params">(Reservoir reservoir)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.reservoir = reservoir;</span><br><span class="line">        <span class="keyword">this</span>.count = LongAdderProxy.create();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Adds a recorded value.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> value the length of the value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">(<span class="keyword">int</span> value)</span> </span>&#123;</span><br><span class="line">        update((<span class="keyword">long</span>) value);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Adds a recorded value.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> value the length of the value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">(<span class="keyword">long</span> value)</span> </span>&#123;</span><br><span class="line">        count.increment();</span><br><span class="line">        reservoir.update(value);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns the number of values recorded.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> the number of values recorded</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getCount</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> count.sum();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Snapshot <span class="title">getSnapshot</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> reservoir.getSnapshot();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Snapshot</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">getMedian</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> <span class="keyword">double</span> <span class="title">get75thPercentile</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    ...</span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>同时具备<a href="#counter">Counter</a>#getCount()功能 和 <a href="#reservoir">Reservoir</a>#getSnapshot()方法</p>
+<p>直方图可以测量min,max,mean,standard deviation，以及分位数，如中位数、p95等等</p>
+<p>通常，取分位数需要获取全量数据集，排序，取值。这适合用于小数据集、批处理系统，不适用于高吞吐、低延迟服务。</p>
+<p>解决方法，是在数据经过时取样。通过维护一个小的、可管理的、在统计上代表整个数据流的储层，我们可以快速而容易地计算出分位数，这是实际分位数的有效近似值。这种技术被称为<code>储层取样(reservoir sampling)</code>。</p>
+<p>目前共有以下几种储层<br><img src="//dydeve.github.io/2019/05/23/metrics/metrics-reservoir.jpg" alt=""></p>
+<h5 id="Meter"><a href="#Meter" class="headerlink" title="Meter"></a>Meter</h5><p>测量平均吞吐量，1min、5min、15min的指数权重吞吐量(rate * duration)<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Just like the Unix load averages visible in uptime or top.</span><br></pre></td></tr></table></figure></p>
+<h5 id="Timers"><a href="#Timers" class="headerlink" title="Timers"></a>Timers</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * A timer metric which aggregates timing durations and provides duration statistics, plus</span></span><br><span class="line"><span class="comment"> * throughput statistics via &#123;<span class="doctag">@link</span> Meter&#125;.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Timer</span> <span class="keyword">implements</span> <span class="title">Metered</span>, <span class="title">Sampling</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Meter meter;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Histogram histogram;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Clock clock;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>聚合时长、时长统计(histogram)、以及吞吐量(meter)</p>
+<h4 id="reporters"><a href="#reporters" class="headerlink" title="reporters"></a>reporters</h4><p>导出metrics统计出的结果，<code>metrics-core</code>提供了四种方式：JMX, console, SLF4J, and CSV.</p>
+<p><img src="//dydeve.github.io/2019/05/23/metrics/metrics-reports.jpg" alt=""></p>
+<h5 id="ScheduledReporter"><a href="#ScheduledReporter" class="headerlink" title="ScheduledReporter"></a>ScheduledReporter</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The abstract base class for all scheduled reporters (i.e., reporters which process a registry's</span></span><br><span class="line"><span class="comment"> * metrics periodically).</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * 调度reporters的基类，周期处理registry的metrics</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> ConsoleReporter</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> CsvReporter</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> Slf4jReporter</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ScheduledReporter</span> <span class="keyword">implements</span> <span class="title">Closeable</span>, <span class="title">Reporter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOG = LoggerFactory.getLogger(ScheduledReporter.class);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * A simple named thread factory.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"NullableProblems"</span>)</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">NamedThreadFactory</span> <span class="keyword">implements</span> <span class="title">ThreadFactory</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> ThreadGroup group;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger threadNumber = <span class="keyword">new</span> AtomicInteger(<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> String namePrefix;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="title">NamedThreadFactory</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> SecurityManager s = System.getSecurityManager();</span><br><span class="line">            <span class="keyword">this</span>.group = (s != <span class="keyword">null</span>) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();</span><br><span class="line">            <span class="keyword">this</span>.namePrefix = <span class="string">"metrics-"</span> + name + <span class="string">"-thread-"</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Thread <span class="title">newThread</span><span class="params">(Runnable r)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> Thread t = <span class="keyword">new</span> Thread(group, r, namePrefix + threadNumber.getAndIncrement(), <span class="number">0</span>);</span><br><span class="line">            t.setDaemon(<span class="keyword">true</span>);</span><br><span class="line">            <span class="keyword">if</span> (t.getPriority() != Thread.NORM_PRIORITY) &#123;</span><br><span class="line">                t.setPriority(Thread.NORM_PRIORITY);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> t;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> AtomicInteger FACTORY_ID = <span class="keyword">new</span> AtomicInteger();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> MetricRegistry registry;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ScheduledExecutorService executor;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> MetricFilter filter;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">double</span> durationFactor;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String durationUnit;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">double</span> rateFactor;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String rateUnit;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new &#123;<span class="doctag">@link</span> ScheduledReporter&#125; instance.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> registry the &#123;<span class="doctag">@link</span> com.codahale.metrics.MetricRegistry&#125; containing the metrics this</span></span><br><span class="line"><span class="comment">     *                 reporter will report</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> name     the reporter's name</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> filter   the filter for which metrics to report</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> rateUnit a unit of time</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> durationUnit a unit of time</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">ScheduledReporter</span><span class="params">(MetricRegistry registry,</span></span></span><br><span class="line"><span class="function"><span class="params">                                String name,</span></span></span><br><span class="line"><span class="function"><span class="params">                                MetricFilter filter,</span></span></span><br><span class="line"><span class="function"><span class="params">                                TimeUnit rateUnit,</span></span></span><br><span class="line"><span class="function"><span class="params">                                TimeUnit durationUnit)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>(registry, name, filter, rateUnit, durationUnit,</span><br><span class="line">                Executors.newSingleThreadScheduledExecutor(<span class="keyword">new</span> NamedThreadFactory(name + <span class="string">'-'</span> + FACTORY_ID.incrementAndGet())));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new &#123;<span class="doctag">@link</span> ScheduledReporter&#125; instance.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> registry the &#123;<span class="doctag">@link</span> com.codahale.metrics.MetricRegistry&#125; containing the metrics this</span></span><br><span class="line"><span class="comment">     *                 reporter will report</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> name     the reporter's name</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> filter   the filter for which metrics to report</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> executor the executor to use while scheduling reporting of metrics.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">ScheduledReporter</span><span class="params">(MetricRegistry registry,</span></span></span><br><span class="line"><span class="function"><span class="params">                                String name,</span></span></span><br><span class="line"><span class="function"><span class="params">                                MetricFilter filter,</span></span></span><br><span class="line"><span class="function"><span class="params">                                TimeUnit rateUnit,</span></span></span><br><span class="line"><span class="function"><span class="params">                                TimeUnit durationUnit,</span></span></span><br><span class="line"><span class="function"><span class="params">                                ScheduledExecutorService executor)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.registry = registry;</span><br><span class="line">        <span class="keyword">this</span>.filter = filter;</span><br><span class="line">        <span class="keyword">this</span>.executor = executor;</span><br><span class="line">        <span class="keyword">this</span>.rateFactor = rateUnit.toSeconds(<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">this</span>.rateUnit = calculateRateUnit(rateUnit);</span><br><span class="line">        <span class="keyword">this</span>.durationFactor = <span class="number">1.0</span> / durationUnit.toNanos(<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">this</span>.durationUnit = durationUnit.toString().toLowerCase(Locale.US);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Starts the reporter polling at the given period.</span></span><br><span class="line"><span class="comment">     * 开始定时任务</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> period the amount of time between polls</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> unit   the unit for &#123;<span class="doctag">@code</span> period&#125;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">(<span class="keyword">long</span> period, TimeUnit unit)</span> </span>&#123;</span><br><span class="line">        executor.scheduleAtFixedRate(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    report();</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">                    LOG.error(<span class="string">"Exception thrown from &#123;&#125;#report. Exception was suppressed."</span>, ScheduledReporter.<span class="keyword">this</span>.getClass().getSimpleName(), ex);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, period, period, unit);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Stops the reporter and shuts down its thread of execution.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * Uses the shutdown pattern from http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        executor.shutdown(); <span class="comment">// Disable new tasks from being submitted</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// Wait a while for existing tasks to terminate</span></span><br><span class="line">            <span class="keyword">if</span> (!executor.awaitTermination(<span class="number">1</span>, TimeUnit.SECONDS)) &#123;</span><br><span class="line">                executor.shutdownNow(); <span class="comment">// Cancel currently executing tasks</span></span><br><span class="line">                <span class="comment">// Wait a while for tasks to respond to being cancelled</span></span><br><span class="line">                <span class="keyword">if</span> (!executor.awaitTermination(<span class="number">1</span>, TimeUnit.SECONDS)) &#123;</span><br><span class="line">                    System.err.println(getClass().getSimpleName() + <span class="string">": ScheduledExecutorService did not terminate"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException ie) &#123;</span><br><span class="line">            <span class="comment">// (Re-)Cancel if current thread also interrupted</span></span><br><span class="line">            executor.shutdownNow();</span><br><span class="line">            <span class="comment">// Preserve interrupt status</span></span><br><span class="line">            Thread.currentThread().interrupt();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Stops the reporter and shuts down its thread of execution.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        stop();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Report the current values of all metrics in the registry.</span></span><br><span class="line"><span class="comment">     * 输出metrics，synchronized</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">report</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">            report(registry.getGauges(filter),</span><br><span class="line">                    registry.getCounters(filter),</span><br><span class="line">                    registry.getHistograms(filter),</span><br><span class="line">                    registry.getMeters(filter),</span><br><span class="line">                    registry.getTimers(filter));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Called periodically by the polling thread. Subclasses should report all the given metrics.</span></span><br><span class="line"><span class="comment">     * 留给子类继承</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> gauges     all of the gauges in the registry</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> counters   all of the counters in the registry</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> histograms all of the histograms in the registry</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> meters     all of the meters in the registry</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> timers     all of the timers in the registry</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">report</span><span class="params">(SortedMap&lt;String, Gauge&gt; gauges,</span></span></span><br><span class="line"><span class="function"><span class="params">                                SortedMap&lt;String, Counter&gt; counters,</span></span></span><br><span class="line"><span class="function"><span class="params">                                SortedMap&lt;String, Histogram&gt; histograms,</span></span></span><br><span class="line"><span class="function"><span class="params">                                SortedMap&lt;String, Meter&gt; meters,</span></span></span><br><span class="line"><span class="function"><span class="params">                                SortedMap&lt;String, Timer&gt; timers)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所谓的start、stop，就是调度定时器、关闭定时器</p>
+<h5 id="Other-Reporters"><a href="#Other-Reporters" class="headerlink" title="Other Reporters"></a>Other Reporters</h5><p><a href="https://metrics.dropwizard.io/4.0.0/manual/servlets.html#manual-servlets" target="_blank" rel="noopener">MetricsServlet</a> 健康检查、thread dump、JVM-level and OS-level信息</p>
+<p><a href="https://metrics.dropwizard.io/4.0.0/manual/graphite.html#manual-graphite" target="_blank" rel="noopener">GraphiteReporter</a>图形界面</p>
+<h4 id="JVM-Instrumentation"><a href="#JVM-Instrumentation" class="headerlink" title="JVM Instrumentation"></a>JVM Instrumentation</h4><p><a href="https://metrics.dropwizard.io/4.0.0/manual/jvm.html" target="_blank" rel="noopener">metrics-jvm</a></p>
+<pre><code>- Run count and elapsed times for all supported garbage collectors
+- Memory usage for all memory pools, including off-heap memory
+- Breakdown of thread states, including deadlocks
+- File descriptor usage
+- Buffer pool sizes and utilization
+</code></pre><p><a href="https://www.stubbornjava.com/posts/monitoring-your-jvm-with-dropwizard-metrics" target="_blank" rel="noopener">Monitoring your JVM with Dropwizard Metrics</a></p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://metrics.dropwizard.io/4.0.0/manual/core.html" target="_blank" rel="noopener">metrics操作手册</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/monitor/" rel="tag"># monitor</a>
+          
+            <a href="/tags/metric/" rel="tag"># metric</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/23/spark-mertric/" rel="next" title="spark mertric度量">
+                <i class="fa fa-chevron-left"></i> spark mertric度量
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/27/clickhouse-jdbc/" rel="prev" title="向 clickhouse-jdbc 学习 jdbc">
+                向 clickhouse-jdbc 学习 jdbc <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Metrics-Core"><span class="nav-number">2.</span> <span class="nav-text">Metrics Core</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Metric-Registries"><span class="nav-number">2.1.</span> <span class="nav-text">Metric Registries</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-metric-types"><span class="nav-number">2.2.</span> <span class="nav-text">5 metric types</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Gauge"><span class="nav-number">2.2.1.</span> <span class="nav-text">Gauge</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Counter"><span class="nav-number">2.2.2.</span> <span class="nav-text">Counter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Histogram"><span class="nav-number">2.2.3.</span> <span class="nav-text">Histogram</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Meter"><span class="nav-number">2.2.4.</span> <span class="nav-text">Meter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Timers"><span class="nav-number">2.2.5.</span> <span class="nav-text">Timers</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#reporters"><span class="nav-number">2.3.</span> <span class="nav-text">reporters</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#ScheduledReporter"><span class="nav-number">2.3.1.</span> <span class="nav-text">ScheduledReporter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Other-Reporters"><span class="nav-number">2.3.2.</span> <span class="nav-text">Other Reporters</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JVM-Instrumentation"><span class="nav-number">2.4.</span> <span class="nav-text">JVM Instrumentation</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

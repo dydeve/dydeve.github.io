@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="spark,big data,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="action 与 transformation learn spark by an example中提到了 transformation 和 action 两种操作，意为准换、行动。org.apache.spark.rdd.RDD 包含这两种算子。可以通过函数返回值来区分这两种算子：  transformation：返回RDD，如map，flatMap，union等 action：返回具体的值，如">
+<meta name="keywords" content="spark,big data">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark transformation and action overview">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="action 与 transformation learn spark by an example中提到了 transformation 和 action 两种操作，意为准换、行动。org.apache.spark.rdd.RDD 包含这两种算子。可以通过函数返回值来区分这两种算子：  transformation：返回RDD，如map，flatMap，union等 action：返回具体的值，如">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/transformation-and-action.png">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/dependency-class-graph.jpg">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/dependency0.png">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/cartesian.png">
+<meta property="og:updated_time" content="2019-05-21T06:43:52.499Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark transformation and action overview">
+<meta name="twitter:description" content="action 与 transformation learn spark by an example中提到了 transformation 和 action 两种操作，意为准换、行动。org.apache.spark.rdd.RDD 包含这两种算子。可以通过函数返回值来区分这两种算子：  transformation：返回RDD，如map，flatMap，union等 action：返回具体的值，如">
+<meta name="twitter:image" content="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/transformation-and-action.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/">
+
+
+
+
+
+  <title>spark transformation and action overview | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark transformation and action overview</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-15T22:44:20+08:00">
+                2019-05-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="action-与-transformation"><a href="#action-与-transformation" class="headerlink" title="action 与 transformation"></a>action 与 transformation</h3><p><img src="//dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/transformation-and-action.png" alt=""></p>
+<p><a href="./learn-spark-by-an-example.md">learn spark by an example</a>中提到了 <a href="http://spark.apache.org/docs/2.4.3/rdd-programming-guide.html#transformations" target="_blank" rel="noopener">transformation</a> 和 <a href="http://spark.apache.org/docs/2.4.3/rdd-programming-guide.html#actions" target="_blank" rel="noopener">action</a> 两种操作，意为准换、行动。<code>org.apache.spark.rdd.RDD</code> 包含这两种算子。可以通过函数返回值来区分这两种算子：</p>
+<ul>
+<li><code>transformation</code>：返回RDD，如map，flatMap，union等</li>
+<li><code>action</code>：返回具体的值，如count，collect等</li>
+</ul>
+<p>很多资料显示，transformation延迟执行，action立即执行。这是为什么呢？</p>
+<p>以map为例：<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//org.apache.spark.rdd.RDD</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">map</span></span>[<span class="type">U</span>: <span class="type">ClassTag</span>](f: <span class="type">T</span> =&gt; <span class="type">U</span>): <span class="type">RDD</span>[<span class="type">U</span>] = withScope &#123;</span><br><span class="line">    <span class="keyword">val</span> cleanF = sc.clean(f)</span><br><span class="line">    <span class="keyword">new</span> <span class="type">MapPartitionsRDD</span>[<span class="type">U</span>, <span class="type">T</span>](<span class="keyword">this</span>, (context, pid, iter) =&gt; iter.map(cleanF))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An RDD that applies the provided function to every partition of the parent RDD.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">class</span> <span class="title">MapPartitionsRDD</span>[<span class="type">U</span>: <span class="type">ClassTag</span>, <span class="type">T</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    var prev: <span class="type">RDD</span>[<span class="type">T</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    f: (<span class="type">TaskContext</span>, <span class="type">Int</span>, <span class="type">Iterator</span>[<span class="type">T</span>]</span>) <span class="title">=&gt;</span> <span class="title">Iterator</span>[<span class="type">U</span>],  <span class="title">//</span> (<span class="params"><span class="type">TaskContext</span>, partition index, iterator</span>)</span></span><br><span class="line"><span class="class">    <span class="title">preservesPartitioning</span></span>: <span class="type">Boolean</span> = <span class="literal">false</span>)</span><br><span class="line">  <span class="keyword">extends</span> <span class="type">RDD</span>[<span class="type">U</span>](prev) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">val</span> partitioner = <span class="keyword">if</span> (preservesPartitioning) firstParent[<span class="type">T</span>].partitioner <span class="keyword">else</span> <span class="type">None</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getPartitions</span></span>: <span class="type">Array</span>[<span class="type">Partition</span>] = firstParent[<span class="type">T</span>].partitions</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">U</span>] =</span><br><span class="line">    f(context, split.index, firstParent[<span class="type">T</span>].iterator(split, context))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">clearDependencies</span></span>() &#123;</span><br><span class="line">    <span class="keyword">super</span>.clearDependencies()</span><br><span class="line">    prev = <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可见，map算子只是new了一个新 <code>MapPartitionsRDD</code> 返回，并没有实际运算.</p>
+<p>以下算子也是一样<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *  Return a new RDD by first applying a function to all elements of this</span></span><br><span class="line"><span class="comment"> *  RDD, and then flattening the results.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">flatMap</span></span>[<span class="type">U</span>: <span class="type">ClassTag</span>](f: <span class="type">T</span> =&gt; <span class="type">TraversableOnce</span>[<span class="type">U</span>]): <span class="type">RDD</span>[<span class="type">U</span>] = withScope &#123;</span><br><span class="line">  <span class="keyword">val</span> cleanF = sc.clean(f)</span><br><span class="line">  <span class="keyword">new</span> <span class="type">MapPartitionsRDD</span>[<span class="type">U</span>, <span class="type">T</span>](<span class="keyword">this</span>, (context, pid, iter) =&gt; iter.flatMap(cleanF))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Return a new RDD containing only the elements that satisfy a predicate.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">filter</span></span>(f: <span class="type">T</span> =&gt; <span class="type">Boolean</span>): <span class="type">RDD</span>[<span class="type">T</span>] = withScope &#123;</span><br><span class="line">  <span class="keyword">val</span> cleanF = sc.clean(f)</span><br><span class="line">  <span class="keyword">new</span> <span class="type">MapPartitionsRDD</span>[<span class="type">T</span>, <span class="type">T</span>](</span><br><span class="line">    <span class="keyword">this</span>,</span><br><span class="line">    (context, pid, iter) =&gt; iter.filter(cleanF),</span><br><span class="line">    preservesPartitioning = <span class="literal">true</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Return a new RDD containing the distinct elements in this RDD.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">distinct</span></span>(numPartitions: <span class="type">Int</span>)(<span class="keyword">implicit</span> ord: <span class="type">Ordering</span>[<span class="type">T</span>] = <span class="literal">null</span>): <span class="type">RDD</span>[<span class="type">T</span>] = withScope &#123;</span><br><span class="line">  map(x =&gt; (x, <span class="literal">null</span>)).reduceByKey((x, y) =&gt; x, numPartitions).map(_._1)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Return a new RDD containing the distinct elements in this RDD.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">distinct</span></span>(): <span class="type">RDD</span>[<span class="type">T</span>] = withScope &#123;</span><br><span class="line">  distinct(partitions.length)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>再来看看action<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Return the number of elements in the RDD.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">count</span></span>(): <span class="type">Long</span> = sc.runJob(<span class="keyword">this</span>, <span class="type">Utils</span>.getIteratorSize _).sum</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Applies a function f to all elements of this RDD.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">foreach</span></span>(f: <span class="type">T</span> =&gt; <span class="type">Unit</span>): <span class="type">Unit</span> = withScope &#123;</span><br><span class="line">   <span class="keyword">val</span> cleanF = sc.clean(f)</span><br><span class="line">   sc.runJob(<span class="keyword">this</span>, (iter: <span class="type">Iterator</span>[<span class="type">T</span>]) =&gt; iter.foreach(cleanF))</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Applies a function f to each partition of this RDD.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">foreachPartition</span></span>(f: <span class="type">Iterator</span>[<span class="type">T</span>] =&gt; <span class="type">Unit</span>): <span class="type">Unit</span> = withScope &#123;</span><br><span class="line">   <span class="keyword">val</span> cleanF = sc.clean(f)</span><br><span class="line">   sc.runJob(<span class="keyword">this</span>, (iter: <span class="type">Iterator</span>[<span class="type">T</span>]) =&gt; cleanF(iter))</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Return an array that contains all of the elements in this RDD.</span></span><br><span class="line"><span class="comment">  *</span></span><br><span class="line"><span class="comment">  * @note This method should only be used if the resulting array is expected to be small, as</span></span><br><span class="line"><span class="comment">  * all the data is loaded into the driver's memory.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">collect</span></span>(): <span class="type">Array</span>[<span class="type">T</span>] = withScope &#123;</span><br><span class="line">   <span class="keyword">val</span> results = sc.runJob(<span class="keyword">this</span>, (iter: <span class="type">Iterator</span>[<span class="type">T</span>]) =&gt; iter.toArray)</span><br><span class="line">   <span class="type">Array</span>.concat(results: _*)</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，action本质上都在调用<code>SparkContext</code>的<code>runJob</code>方法,在RDD的所有partition上运行一个job，返回一个数组，每个元素包含一个partition的结果<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Run a job on all partitions in an RDD and return the results in an array.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param rdd target RDD to run tasks on</span></span><br><span class="line"><span class="comment"> * @param func a function to run on each partition of the RDD</span></span><br><span class="line"><span class="comment"> * @return in-memory collection with a result of the job (each collection element will contain</span></span><br><span class="line"><span class="comment"> * a result from one partition)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">runJob</span></span>[<span class="type">T</span>, <span class="type">U</span>: <span class="type">ClassTag</span>](rdd: <span class="type">RDD</span>[<span class="type">T</span>], func: <span class="type">Iterator</span>[<span class="type">T</span>] =&gt; <span class="type">U</span>): <span class="type">Array</span>[<span class="type">U</span>] = &#123;</span><br><span class="line">  runJob(rdd, func, <span class="number">0</span> until rdd.partitions.length)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>SparkContext</code>后面有空再讲</p>
+<h3 id="dependency"><a href="#dependency" class="headerlink" title="dependency"></a>dependency</h3><p>dependency表示RDD之间的依赖关系</p>
+<p>RDD的构造函数里有dependency.可通过构造函数，判断是什么依赖</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">RDD</span>[<span class="type">T</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    @transient private var _sc: <span class="type">SparkContext</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    @transient private var deps: <span class="type">Seq</span>[<span class="type">Dependency</span>[_]]</span></span></span><br><span class="line"><span class="class"><span class="params">  </span>)</span></span><br></pre></td></tr></table></figure>
+<p>有时，构造函数里的dependency是 <code>Nil</code> ,这时可以通过 <code>getDependencies</code> 方法获得依赖类型</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@DeveloperApi</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UnionRDD</span>[<span class="type">T</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    sc: <span class="type">SparkContext</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    var rdds: <span class="type">Seq</span>[<span class="type">RDD</span>[<span class="type">T</span>]]</span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">RDD</span>[<span class="type">T</span>](<span class="params">sc, <span class="type">Nil</span></span>) </span>&#123;  <span class="comment">// Nil since we implement getDependencies</span></span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getDependencies</span></span>: <span class="type">Seq</span>[<span class="type">Dependency</span>[_]] = &#123;</span><br><span class="line">    <span class="keyword">val</span> deps = <span class="keyword">new</span> <span class="type">ArrayBuffer</span>[<span class="type">Dependency</span>[_]]</span><br><span class="line">    <span class="keyword">var</span> pos = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> (rdd &lt;- rdds) &#123;</span><br><span class="line">      deps += <span class="keyword">new</span> <span class="type">RangeDependency</span>(rdd, <span class="number">0</span>, pos, rdd.partitions.length)</span><br><span class="line">      pos += rdd.partitions.length</span><br><span class="line">    &#125;</span><br><span class="line">    deps</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>dependency类图如下<br><img src="//dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/dependency-class-graph.jpg" alt=""></p>
+<table>
+<thead>
+<tr>
+<th>父RDD : 子RDD</th>
+<th>possible dependency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1:1</td>
+<td>OneToOneDependency</td>
+</tr>
+<tr>
+<td>N:1</td>
+<td>N:1 NarrowDependency</td>
+</tr>
+<tr>
+<td>N:N</td>
+<td>N:N NarrowDependency(笛卡尔)</td>
+</tr>
+</tbody>
+</table>
+<p>ShuffleDependency, 见 <code>ShuffledRDD</code></p>
+<p>有时，RDD会使用匿名内部类，不在上面的类图里面！如 笛卡尔积EDD <code>CartesianRDD</code><br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[spark]</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CartesianRDD</span>[<span class="type">T</span>: <span class="type">ClassTag</span>, <span class="type">U</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    sc: <span class="type">SparkContext</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    var rdd1 : <span class="type">RDD</span>[<span class="type">T</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    var rdd2 : <span class="type">RDD</span>[<span class="type">U</span>]</span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">RDD</span>[(<span class="type">T</span>, <span class="type">U</span>)](<span class="params">sc, <span class="type">Nil</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">with</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> numPartitionsInRdd2 = rdd2.partitions.length</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getPartitions</span></span>: <span class="type">Array</span>[<span class="type">Partition</span>] = &#123;</span><br><span class="line">    <span class="comment">// create the cross product split</span></span><br><span class="line">    <span class="keyword">val</span> array = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">Partition</span>](rdd1.partitions.length * rdd2.partitions.length)</span><br><span class="line">    <span class="keyword">for</span> (s1 &lt;- rdd1.partitions; s2 &lt;- rdd2.partitions) &#123;</span><br><span class="line">      <span class="keyword">val</span> idx = s1.index * numPartitionsInRdd2 + s2.index</span><br><span class="line">      array(idx) = <span class="keyword">new</span> <span class="type">CartesianPartition</span>(idx, rdd1, rdd2, s1.index, s2.index)</span><br><span class="line">    &#125;</span><br><span class="line">    array</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getPreferredLocations</span></span>(split: <span class="type">Partition</span>): <span class="type">Seq</span>[<span class="type">String</span>] = &#123;</span><br><span class="line">    <span class="keyword">val</span> currSplit = split.asInstanceOf[<span class="type">CartesianPartition</span>]</span><br><span class="line">    (rdd1.preferredLocations(currSplit.s1) ++ rdd2.preferredLocations(currSplit.s2)).distinct</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[(<span class="type">T</span>, <span class="type">U</span>)] = &#123;</span><br><span class="line">    <span class="keyword">val</span> currSplit = split.asInstanceOf[<span class="type">CartesianPartition</span>]</span><br><span class="line">    <span class="keyword">for</span> (x &lt;- rdd1.iterator(currSplit.s1, context);</span><br><span class="line">         y &lt;- rdd2.iterator(currSplit.s2, context)) <span class="keyword">yield</span> (x, y)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getDependencies</span></span>: <span class="type">Seq</span>[<span class="type">Dependency</span>[_]] = <span class="type">List</span>(</span><br><span class="line">    <span class="keyword">new</span> <span class="type">NarrowDependency</span>(rdd1) &#123;</span><br><span class="line">      <span class="function"><span class="keyword">def</span> <span class="title">getParents</span></span>(id: <span class="type">Int</span>): <span class="type">Seq</span>[<span class="type">Int</span>] = <span class="type">List</span>(id / numPartitionsInRdd2)</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="keyword">new</span> <span class="type">NarrowDependency</span>(rdd2) &#123;</span><br><span class="line">      <span class="function"><span class="keyword">def</span> <span class="title">getParents</span></span>(id: <span class="type">Int</span>): <span class="type">Seq</span>[<span class="type">Int</span>] = <span class="type">List</span>(id % numPartitionsInRdd2)</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>NarrowDependency VS ShuffleDependency =&gt; FullDependency VS PartialDependency</p>
+<p>NarrowDependency: 子rdd依赖父RDD中固定的Partition</p>
+<p>ShuffleDependency: 子RDD对父RDD中的所有RDD都可能产生依赖.父RDD中的每个partition分成多个部分transformation到子RDD，reducebyKey等,</p>
+<p>OneToOneDependency: 1对1，map，mapPartitions等</p>
+<p>RangeDependency: 仅用于<code>UnionRDD</code></p>
+<p>PruneDependency: <code>PartitionPruningRDD</code>  prune意为修剪</p>
+<p>例如: RDD通过range分区，DAG在key上有filter，range不覆盖key的分区不用发起任务</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * :: DeveloperApi ::</span></span><br><span class="line"><span class="comment"> * An RDD used to prune RDD partitions/partitions so we can avoid launching tasks on</span></span><br><span class="line"><span class="comment"> * all partitions. An example use case: If we know the RDD is partitioned by range,</span></span><br><span class="line"><span class="comment"> * and the execution DAG has a filter on the key, we can avoid launching tasks</span></span><br><span class="line"><span class="comment"> * on partitions that don't have the range covering the key.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@DeveloperApi</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PartitionPruningRDD</span>[<span class="type">T</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    prev: <span class="type">RDD</span>[<span class="type">T</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    partitionFilterFunc: <span class="type">Int</span> =&gt; <span class="type">Boolean</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">RDD</span>[<span class="type">T</span>](<span class="params">prev.context, <span class="type">List</span>(new <span class="type">PruneDependency</span>(prev, partitionFilterFunc</span>))) </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">T</span>] = &#123;</span><br><span class="line">    firstParent[<span class="type">T</span>].iterator(</span><br><span class="line">      split.asInstanceOf[<span class="type">PartitionPruningRDDPartition</span>].parentSplit, context)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getPartitions</span></span>: <span class="type">Array</span>[<span class="type">Partition</span>] =</span><br><span class="line">    dependencies.head.asInstanceOf[<span class="type">PruneDependency</span>[<span class="type">T</span>]].partitions</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有时一个transformation算子导致的dependency并不固定，如 <code>PairRDDFunctions.cogroup</code> </p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PairRDDFunctions</span>[<span class="type">K</span>, <span class="type">V</span>](<span class="params">self: <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">V</span></span>)])</span></span><br><span class="line"><span class="class">    (<span class="params">implicit kt: <span class="type">ClassTag</span>[<span class="type">K</span>], vt: <span class="type">ClassTag</span>[<span class="type">V</span>], ord: <span class="type">Ordering</span>[<span class="type">K</span>] = null</span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">Logging</span> <span class="keyword">with</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * For each key k in `this` or `other1` or `other2` or `other3`,</span></span><br><span class="line"><span class="comment">   * return a resulting RDD that contains a tuple with the list of values</span></span><br><span class="line"><span class="comment">   * for that key in `this`, `other1`, `other2` and `other3`.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cogroup</span></span>[<span class="type">W1</span>, <span class="type">W2</span>, <span class="type">W3</span>](other1: <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">W1</span>)],</span><br><span class="line">      other2: <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">W2</span>)],</span><br><span class="line">      other3: <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">W3</span>)],</span><br><span class="line">      partitioner: <span class="type">Partitioner</span>)</span><br><span class="line">      : <span class="type">RDD</span>[(<span class="type">K</span>, (<span class="type">Iterable</span>[<span class="type">V</span>], <span class="type">Iterable</span>[<span class="type">W1</span>], <span class="type">Iterable</span>[<span class="type">W2</span>], <span class="type">Iterable</span>[<span class="type">W3</span>]))] = self.withScope &#123;</span><br><span class="line">    <span class="keyword">if</span> (partitioner.isInstanceOf[<span class="type">HashPartitioner</span>] &amp;&amp; keyClass.isArray) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">SparkException</span>(<span class="string">"HashPartitioner cannot partition array keys."</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">val</span> cg = <span class="keyword">new</span> <span class="type">CoGroupedRDD</span>[<span class="type">K</span>](<span class="type">Seq</span>(self, other1, other2, other3), partitioner)</span><br><span class="line">    cg.mapValues &#123; <span class="keyword">case</span> <span class="type">Array</span>(vs, w1s, w2s, w3s) =&gt;</span><br><span class="line">       (vs.asInstanceOf[<span class="type">Iterable</span>[<span class="type">V</span>]],</span><br><span class="line">         w1s.asInstanceOf[<span class="type">Iterable</span>[<span class="type">W1</span>]],</span><br><span class="line">         w2s.asInstanceOf[<span class="type">Iterable</span>[<span class="type">W2</span>]],</span><br><span class="line">         w3s.asInstanceOf[<span class="type">Iterable</span>[<span class="type">W3</span>]])</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CoGroupedRDD</span>[<span class="type">K</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    @transient var rdds: <span class="type">Seq</span>[<span class="type">RDD</span>[_ &lt;: <span class="type">Product2</span>[<span class="type">K</span>, _]]],</span></span></span><br><span class="line"><span class="class"><span class="params">    part: <span class="type">Partitioner</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">RDD</span>[(<span class="type">K</span>, <span class="type">Array</span>[<span class="type">Iterable</span>[_]])](<span class="params">rdds.head.context, <span class="type">Nil</span></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getDependencies</span></span>: <span class="type">Seq</span>[<span class="type">Dependency</span>[_]] = &#123;</span><br><span class="line">    rdds.map &#123; rdd: <span class="type">RDD</span>[_] =&gt;</span><br><span class="line">      <span class="keyword">if</span> (rdd.partitioner == <span class="type">Some</span>(part)) &#123;</span><br><span class="line">        logDebug(<span class="string">"Adding one-to-one dependency with "</span> + rdd)</span><br><span class="line">        <span class="keyword">new</span> <span class="type">OneToOneDependency</span>(rdd)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        logDebug(<span class="string">"Adding shuffle dependency with "</span> + rdd)</span><br><span class="line">        <span class="keyword">new</span> <span class="type">ShuffleDependency</span>[<span class="type">K</span>, <span class="type">Any</span>, <span class="type">CoGroupCombiner</span>](</span><br><span class="line">          rdd.asInstanceOf[<span class="type">RDD</span>[_ &lt;: <span class="type">Product2</span>[<span class="type">K</span>, _]]], part, serializer)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当子RDD的<code>partitioner</code>与父RDD的<code>partitioner</code>相等时，产生<code>OneToOneDependency</code>. 否则，<code>ShuffleDependency</code></p>
+<p>ShuffleDependency 左边的 RDD 中的 record 要求是 [K, V] 型的，经过 ShuffleDependency 后，包含相同 key 的 records 会被 aggregate 到一起，然后在 aggregated 的 records 上执行不同的计算逻辑。实际执行时很多 transformation() 如 groupByKey()，reduceByKey() 是边 aggregate 数据边执行计算逻辑的，因此共同之处就是 aggregate 同时 compute()。Spark 使用 <code>combineByKeyWithClassTag</code> 来实现这个 aggregate + compute() 的基础操作。<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">combineByKeyWithClassTag</span></span>[<span class="type">C</span>](</span><br><span class="line">      createCombiner: <span class="type">V</span> =&gt; <span class="type">C</span>,</span><br><span class="line">      mergeValue: (<span class="type">C</span>, <span class="type">V</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">      mergeCombiners: (<span class="type">C</span>, <span class="type">C</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">      partitioner: <span class="type">Partitioner</span>,</span><br><span class="line">      mapSideCombine: <span class="type">Boolean</span> = <span class="literal">true</span>,</span><br><span class="line">      serializer: <span class="type">Serializer</span> = <span class="literal">null</span>)</span><br></pre></td></tr></table></figure></p>
+<h3 id="stage-and-task"><a href="#stage-and-task" class="headerlink" title="stage and task"></a>stage and task</h3><p>如何划分stage，task?</p>
+<p>从 <code>finalRDD</code> 往前，遇到 <code>ShuffleDependency</code> 就切分 Stage,遇 <code>NarrowDependency</code> 就加入该 Stage，每个 Stage 里 Task 的数量，由该 Stage 最后一个 RDD 的 partition 数量决定。如果 Stage 要产生 result，则里面的 Task 都是 ResultTask，否则都是 ShuffleMapTask。</p>
+<p><code>pipeline</code> 思想：数据用的时候再算，而且数据是流到要计算的位置</p>
+<p>下图stage中，包含 map union partitionBy join<br><img src="//dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/dependency0.png" alt=""></p>
+<p>以笛卡尔积为例<br><img src="//dydeve.github.io/2019/05/15/spark-transformation-and-action-overview/cartesian.png" alt=""><br>一共6个 ResultTask.每个 Task 计算3个 RDD，读2个 data block。计算 CartesianRDD 的 partition，需要从2个RDD获取records，由于存在一个ResultTask里，不需要shuffle</p>
+<p>不管是1:1,N:1,N:N，只要是NarrowDependency chain，就可以进行 pipeline</p>
+<p>CartesianRDD 源码如下,很简单<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[spark]</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CartesianRDD</span>[<span class="type">T</span>: <span class="type">ClassTag</span>, <span class="type">U</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    sc: <span class="type">SparkContext</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    var rdd1 : <span class="type">RDD</span>[<span class="type">T</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    var rdd2 : <span class="type">RDD</span>[<span class="type">U</span>]</span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">RDD</span>[(<span class="type">T</span>, <span class="type">U</span>)](<span class="params">sc, <span class="type">Nil</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">with</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> numPartitionsInRdd2 = rdd2.partitions.length</span><br><span class="line"></span><br><span class="line">  <span class="comment">// m * n</span></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getPartitions</span></span>: <span class="type">Array</span>[<span class="type">Partition</span>] = &#123;</span><br><span class="line">    <span class="comment">// create the cross product split</span></span><br><span class="line">    <span class="keyword">val</span> array = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">Partition</span>](rdd1.partitions.length * rdd2.partitions.length)</span><br><span class="line">    <span class="keyword">for</span> (s1 &lt;- rdd1.partitions; s2 &lt;- rdd2.partitions) &#123;</span><br><span class="line">      <span class="keyword">val</span> idx = s1.index * numPartitionsInRdd2 + s2.index</span><br><span class="line">      array(idx) = <span class="keyword">new</span> <span class="type">CartesianPartition</span>(idx, rdd1, rdd2, s1.index, s2.index)</span><br><span class="line">    &#125;</span><br><span class="line">    array</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getPreferredLocations</span></span>(split: <span class="type">Partition</span>): <span class="type">Seq</span>[<span class="type">String</span>] = &#123;</span><br><span class="line">    <span class="keyword">val</span> currSplit = split.asInstanceOf[<span class="type">CartesianPartition</span>]</span><br><span class="line">    (rdd1.preferredLocations(currSplit.s1) ++ rdd2.preferredLocations(currSplit.s2)).distinct</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[(<span class="type">T</span>, <span class="type">U</span>)] = &#123;</span><br><span class="line">    <span class="keyword">val</span> currSplit = split.asInstanceOf[<span class="type">CartesianPartition</span>]</span><br><span class="line">    <span class="keyword">for</span> (x &lt;- rdd1.iterator(currSplit.s1, context);</span><br><span class="line">         y &lt;- rdd2.iterator(currSplit.s2, context)) <span class="keyword">yield</span> (x, y)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getDependencies</span></span>: <span class="type">Seq</span>[<span class="type">Dependency</span>[_]] = <span class="type">List</span>(</span><br><span class="line">    <span class="keyword">new</span> <span class="type">NarrowDependency</span>(rdd1) &#123;</span><br><span class="line">      <span class="function"><span class="keyword">def</span> <span class="title">getParents</span></span>(id: <span class="type">Int</span>): <span class="type">Seq</span>[<span class="type">Int</span>] = <span class="type">List</span>(id / numPartitionsInRdd2)</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="keyword">new</span> <span class="type">NarrowDependency</span>(rdd2) &#123;</span><br><span class="line">      <span class="function"><span class="keyword">def</span> <span class="title">getParents</span></span>(id: <span class="type">Int</span>): <span class="type">Seq</span>[<span class="type">Int</span>] = <span class="type">List</span>(id % numPartitionsInRdd2)</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">clearDependencies</span></span>() &#123;</span><br><span class="line">    <span class="keyword">super</span>.clearDependencies()</span><br><span class="line">    rdd1 = <span class="literal">null</span></span><br><span class="line">    rdd2 = <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>再看看MapPartitionsRDD源码<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An RDD that applies the provided function to every partition of the parent RDD.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">class</span> <span class="title">MapPartitionsRDD</span>[<span class="type">U</span>: <span class="type">ClassTag</span>, <span class="type">T</span>: <span class="type">ClassTag</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    var prev: <span class="type">RDD</span>[<span class="type">T</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    f: (<span class="type">TaskContext</span>, <span class="type">Int</span>, <span class="type">Iterator</span>[<span class="type">T</span>]</span>) <span class="title">=&gt;</span> <span class="title">Iterator</span>[<span class="type">U</span>],  <span class="title">//</span> (<span class="params"><span class="type">TaskContext</span>, partition index, iterator</span>)</span></span><br><span class="line"><span class="class">    <span class="title">preservesPartitioning</span></span>: <span class="type">Boolean</span> = <span class="literal">false</span>)</span><br><span class="line">  <span class="keyword">extends</span> <span class="type">RDD</span>[<span class="type">U</span>](prev) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//firstParent  父RDD中的第一个</span></span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">val</span> partitioner = <span class="keyword">if</span> (preservesPartitioning) firstParent[<span class="type">T</span>].partitioner <span class="keyword">else</span> <span class="type">None</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getPartitions</span></span>: <span class="type">Array</span>[<span class="type">Partition</span>] = firstParent[<span class="type">T</span>].partitions</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">U</span>] =</span><br><span class="line">    f(context, split.index, firstParent[<span class="type">T</span>].iterator(split, context))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">clearDependencies</span></span>() &#123;</span><br><span class="line">    <span class="keyword">super</span>.clearDependencies()</span><br><span class="line">    prev = <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可见，compute调用父RDD的iterator方法，将父RDD或data block中的records一个个fetch过来</p>
+<hr>
+<p><a href="https://github.com/JerryLead/SparkInternals/blob/master/markdown/3-JobPhysicalPlan.md" target="_blank" rel="noopener">SparkInternals JobPhysicalPlan</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spark/" rel="tag"># spark</a>
+          
+            <a href="/tags/big-data/" rel="tag"># big data</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/15/learn-spark-by-an-example/" rel="next" title="learn spark by an example">
+                <i class="fa fa-chevron-left"></i> learn spark by an example
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/17/spark-withScope-and-clean/" rel="prev" title="spark withScope and clean">
+                spark withScope and clean <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#action-与-transformation"><span class="nav-number">1.</span> <span class="nav-text">action 与 transformation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dependency"><span class="nav-number">2.</span> <span class="nav-text">dependency</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stage-and-task"><span class="nav-number">3.</span> <span class="nav-text">stage and task</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

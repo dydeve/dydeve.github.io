@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="spark,big data,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="spark核心功能 基础设施  包括SparkConf、内置RPC框架、事件总线(ListenerBus)、度量系统 1. SparkConf管理Spark配置信息 2. RPC框架由netty实现，有同步、异步多种实现,跨机器节点不同组件的通信设施，用于各组件间的通信 3. ListenerBus是sparkContext内部各组件使用事件-监听器模式异步调用 4. 度量系统(MetricS">
+<meta name="keywords" content="spark,big data">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark设计理念和基本架构">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/19/spark-design-concept-basic-architecture/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="spark核心功能 基础设施  包括SparkConf、内置RPC框架、事件总线(ListenerBus)、度量系统 1. SparkConf管理Spark配置信息 2. RPC框架由netty实现，有同步、异步多种实现,跨机器节点不同组件的通信设施，用于各组件间的通信 3. ListenerBus是sparkContext内部各组件使用事件-监听器模式异步调用 4. 度量系统(MetricS">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://spark.apache.org/docs/2.4.3/img/cluster-overview.png">
+<meta property="og:updated_time" content="2019-05-21T06:43:52.498Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark设计理念和基本架构">
+<meta name="twitter:description" content="spark核心功能 基础设施  包括SparkConf、内置RPC框架、事件总线(ListenerBus)、度量系统 1. SparkConf管理Spark配置信息 2. RPC框架由netty实现，有同步、异步多种实现,跨机器节点不同组件的通信设施，用于各组件间的通信 3. ListenerBus是sparkContext内部各组件使用事件-监听器模式异步调用 4. 度量系统(MetricS">
+<meta name="twitter:image" content="https://spark.apache.org/docs/2.4.3/img/cluster-overview.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/19/spark-design-concept-basic-architecture/">
+
+
+
+
+
+  <title>spark设计理念和基本架构 | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/19/spark-design-concept-basic-architecture/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark设计理念和基本架构</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-19T14:42:57+08:00">
+                2019-05-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/The-Art-of-Spark-Kernel-Design/" itemprop="url" rel="index">
+                    <span itemprop="name">The Art of Spark Kernel Design</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="spark核心功能"><a href="#spark核心功能" class="headerlink" title="spark核心功能"></a>spark核心功能</h3><ol>
+<li>基础设施</li>
+</ol>
+<p>包括SparkConf、内置RPC框架、事件总线(ListenerBus)、度量系统</p>
+<pre><code>1. SparkConf管理Spark配置信息
+2. RPC框架由netty实现，有同步、异步多种实现,跨机器节点不同组件的通信设施，用于各组件间的通信
+3. ListenerBus是sparkContext内部各组件使用事件-监听器模式异步调用
+4. 度量系统(MetricSystem)，由多种度量源、度量输出(Source、Sink)构成，完成各组件运行期状态的监控
+</code></pre><ol start="2">
+<li><p>SparkContext</p>
+<p> 隐藏了网络通信、分布式部署、消息通信、存储体系、计算引擎、度量系统、文件服务、webui</p>
+</li>
+<li><p>SparkEnv</p>
+<p> task运行必须的组件。封装了RPC环境(RpcEnv)、序列化管理器、广播管理器(BroadcastManager)、Map输出跟踪器(MapOutputTracker)、存储体系、度量系统(MetricsSystem)、输出提交协调器(OutputCommitCoordinator)</p>
+</li>
+<li><p>存储体系</p>
+<p> 优先内存、其次磁盘.Spark的内存存储空间、执行存储空间之间可以是软边界，资源紧张的一方可以借用另一方的空间。还提供<code>Tungsten</code>的实现，直接操作os的内存，空间的分配、释放更加迅速。而且省去在堆内分配java对象，更有效利用系统内存资源</p>
+</li>
+<li><p>调度系统</p>
+<p> 内置于SparkContext的DAGScheduler、TaskScheduler构成</p>
+<p> DAGScheduler负责创建job，将DAG中的RDD划分到不同Stage、给Stage创建对应的task，批量提交task</p>
+<p> TaskScheduler按FIFO、FAIR等调度算法对批量Task进行调度，为task分配资源，发送task到Executor</p>
+</li>
+<li><p>计算引擎</p>
+<p> 由内存管理器(MemoryManager)、Tungsten、任务内存管理器(TaskMemoryManager)、Task、外部排序器(ExternalSorter)、Shuffle管理器(ShuffleManager)组成</p>
+<p> MemoryManager为存储内存、计算引擎中的执行内存呢提供支持、管理</p>
+<p> Tungsten 用于存储、计算执行</p>
+<p> TaskMemoryManager为分配给单个task的内存资源进行更细粒度的管理控制</p>
+<p> ExternalSorter在map、reduce端对ShuffleMapTask计算得到的中间结果排序、聚合</p>
+<p> ShuffleManager将各个分区ShuffleMapTask产生的中间结果持久化到磁盘，在reduce端按分区远程拉取中间结果</p>
+</li>
+</ol>
+<h3 id="spark扩展功能"><a href="#spark扩展功能" class="headerlink" title="spark扩展功能"></a>spark扩展功能</h3><p>spark sql、spark streaming、graphx、mllib等</p>
+<h3 id="基本架构"><a href="#基本架构" class="headerlink" title="基本架构"></a>基本架构</h3><p><img src="https://spark.apache.org/docs/2.4.3/img/cluster-overview.png" alt="组成"></p>
+<ol>
+<li><p>ClusterManager 负责集群资源的管理分配。分配的资源属于一级分配，将worker的内存、cpu等资源分配给application。不负责对executor的资源分配</p>
+</li>
+<li><p>worker 将内存、cpu通过注册机制告知ClusterManager；创建executor，分配资源、任务给executor；同步资源信息、executor状态给ClusterManager。standalone模式下，master将worker的资源分配给application后，将命令worker启动<code>CoarseGrainedExecutorBackend</code>进程(此进程创建executor实例),</p>
+</li>
+<li><p>executor，执行任务，与worker、driver信息同步</p>
+</li>
+<li><p>driver，application的驱动程序。application通过driver与ClusterManager、executor通信。可运行在application中，或由app提交给ClusterManager，由ClusterManager安排worker运行</p>
+</li>
+<li><p>application：转换RDD，构建DAG，通过driver注册到ClusterManager。ClusterManager根据app的资源需求，通过一级分配将executor、内存、cpu分配给app；driver通过二级分配将executor等资源分配给task。app通过driver告诉executor执行任务</p>
+</li>
+</ol>
+<h3 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h3><p>通过<code>SparkContext</code>提交的用户应用程序，首先会通过<code>RpcEnv</code>向<code>ClusterManager</code>注册应用(Application)，并告知需要的资源数量。ClusterManager给application分配executor资源，<br>并在worker上启动<code>CoarseGrainedExecutorBackend</code>进程,进程启动过程中通过RpcEnv向driver注册executor的资源信息。</p>
+<p><code>TaskScheduler</code>保存executor的资源信息。SparkContext构建RDD的lineage和DAG。DAG提交给<code>DAGScheduler</code>，DAGScheduler给提交的DAG创建job，将dag划分为Stage。DAGScheduler根据RDD内partition的数量创建task并批量提交给TaskScheduler。TaskScheduler对task按FIFO、FAIR等调度算法调度，将task发送给executor</p>
+<p>sparkContext会在RDD转换前用<code>BlockManager</code>和<code>BroadcastManager</code>将任务的hadoop配置进行广播</p>
+<hr>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spark/" rel="tag"># spark</a>
+          
+            <a href="/tags/big-data/" rel="tag"># big data</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/spark-withScope-and-clean/" rel="next" title="spark withScope and clean">
+                <i class="fa fa-chevron-left"></i> spark withScope and clean
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/20/spark-SparkConf/" rel="prev" title="spark-SparkConf">
+                spark-SparkConf <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#spark核心功能"><span class="nav-number">1.</span> <span class="nav-text">spark核心功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spark扩展功能"><span class="nav-number">2.</span> <span class="nav-text">spark扩展功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基本架构"><span class="nav-number">3.</span> <span class="nav-text">基本架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#具体流程"><span class="nav-number">4.</span> <span class="nav-text">具体流程</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

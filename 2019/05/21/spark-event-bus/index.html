@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="spark,big data,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="ListenerBusspark有一个trait——ListenerBus,事件总线，把事件提交给监听器1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787">
+<meta name="keywords" content="spark,big data">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark事件总线">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/21/spark-event-bus/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="ListenerBusspark有一个trait——ListenerBus,事件总线，把事件提交给监听器1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://dydeve.github.io/2019/05/21/spark-event-bus/listener-bus-hierarchy.jpg">
+<meta property="og:updated_time" content="2019-05-22T18:22:07.790Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark事件总线">
+<meta name="twitter:description" content="ListenerBusspark有一个trait——ListenerBus,事件总线，把事件提交给监听器1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787">
+<meta name="twitter:image" content="https://dydeve.github.io/2019/05/21/spark-event-bus/listener-bus-hierarchy.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/21/spark-event-bus/">
+
+
+
+
+
+  <title>spark事件总线 | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/21/spark-event-bus/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark事件总线</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-21T21:39:42+08:00">
+                2019-05-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/The-Art-of-Spark-Kernel-Design/" itemprop="url" rel="index">
+                    <span itemprop="name">The Art of Spark Kernel Design</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="ListenerBus"><a href="#ListenerBus" class="headerlink" title="ListenerBus"></a>ListenerBus</h3><p>spark有一个trait——<code>ListenerBus</code>,事件总线，把事件提交给监听器<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An event bus which posts events to its listeners.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">trait</span> <span class="title">ListenerBus</span>[<span class="type">L</span> &lt;: <span class="type">AnyRef</span>, <span class="type">E</span>] <span class="keyword">extends</span> <span class="title">Logging</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> listenersPlusTimers = <span class="keyword">new</span> <span class="type">CopyOnWriteArrayList</span>[(<span class="type">L</span>, <span class="type">Option</span>[<span class="type">Timer</span>])]</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Marked `private[spark]` for access in tests.</span></span><br><span class="line">  <span class="keyword">private</span>[spark] <span class="function"><span class="keyword">def</span> <span class="title">listeners</span> </span>= listenersPlusTimers.asScala.map(_._1).asJava</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Returns a CodaHale metrics Timer for measuring the listener's event processing time.</span></span><br><span class="line"><span class="comment">   * This method is intended to be overridden by subclasses.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getTimer</span></span>(listener: <span class="type">L</span>): <span class="type">Option</span>[<span class="type">Timer</span>] = <span class="type">None</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Add a listener to listen events. This method is thread-safe and can be called in any thread.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">addListener</span></span>(listener: <span class="type">L</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    listenersPlusTimers.add((listener, getTimer(listener)))</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Remove a listener and it won't receive any events. This method is thread-safe and can be called</span></span><br><span class="line"><span class="comment">   * in any thread.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">removeListener</span></span>(listener: <span class="type">L</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    listenersPlusTimers.asScala.find(_._1 eq listener).foreach &#123; listenerAndTimer =&gt;</span><br><span class="line">      listenersPlusTimers.remove(listenerAndTimer)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * This can be overriden by subclasses if there is any extra cleanup to do when removing a</span></span><br><span class="line"><span class="comment">   * listener.  In particular AsyncEventQueues can clean up queues in the LiveListenerBus.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">removeListenerOnError</span></span>(listener: <span class="type">L</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    removeListener(listener)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Post the event to all registered listeners. The `postToAll` caller should guarantee calling</span></span><br><span class="line"><span class="comment">   * `postToAll` in the same thread for all events.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">postToAll</span></span>(event: <span class="type">E</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="comment">// JavaConverters can create a JIterableWrapper if we use asScala.</span></span><br><span class="line">    <span class="comment">// However, this method will be called frequently. To avoid the wrapper cost, here we use</span></span><br><span class="line">    <span class="comment">// Java Iterator directly.</span></span><br><span class="line">    <span class="keyword">val</span> iter = listenersPlusTimers.iterator</span><br><span class="line">    <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">      <span class="keyword">val</span> listenerAndMaybeTimer = iter.next()</span><br><span class="line">      <span class="keyword">val</span> listener = listenerAndMaybeTimer._1</span><br><span class="line">      <span class="keyword">val</span> maybeTimer = listenerAndMaybeTimer._2</span><br><span class="line">      <span class="keyword">val</span> maybeTimerContext = <span class="keyword">if</span> (maybeTimer.isDefined) &#123;</span><br><span class="line">        maybeTimer.get.time()</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="literal">null</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        doPostEvent(listener, event)</span><br><span class="line">        <span class="keyword">if</span> (<span class="type">Thread</span>.interrupted()) &#123;</span><br><span class="line">          <span class="comment">// We want to throw the InterruptedException right away so we can associate the interrupt</span></span><br><span class="line">          <span class="comment">// with this listener, as opposed to waiting for a queue.take() etc. to detect it.</span></span><br><span class="line">          <span class="comment">//一旦监听器中断，立即抛异常。而不是等待queue.take()等等，来发现中断</span></span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">InterruptedException</span>()</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> ie: <span class="type">InterruptedException</span> =&gt;</span><br><span class="line">          logError(<span class="string">s"Interrupted while posting to <span class="subst">$&#123;Utils.getFormattedClassName(listener)&#125;</span>.  "</span> +</span><br><span class="line">            <span class="string">s"Removing that listener."</span>, ie)</span><br><span class="line">          removeListenerOnError(listener)<span class="comment">//删除监听器，线程安全</span></span><br><span class="line">        <span class="keyword">case</span> <span class="type">NonFatal</span>(e) =&gt;</span><br><span class="line">          logError(<span class="string">s"Listener <span class="subst">$&#123;Utils.getFormattedClassName(listener)&#125;</span> threw an exception"</span>, e)</span><br><span class="line">      &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (maybeTimerContext != <span class="literal">null</span>) &#123;</span><br><span class="line">          maybeTimerContext.stop()</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Post an event to the specified listener. `onPostEvent` is guaranteed to be called in the same</span></span><br><span class="line"><span class="comment">   * thread for all listeners.</span></span><br><span class="line"><span class="comment">   * 具体对待提交的事件。留给子类继承</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">doPostEvent</span></span>(listener: <span class="type">L</span>, event: <span class="type">E</span>): <span class="type">Unit</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[spark] <span class="function"><span class="keyword">def</span> <span class="title">findListenersByClass</span></span>[<span class="type">T</span> &lt;: <span class="type">L</span> : <span class="type">ClassTag</span>](): <span class="type">Seq</span>[<span class="type">T</span>] = &#123;</span><br><span class="line">    <span class="keyword">val</span> c = implicitly[<span class="type">ClassTag</span>[<span class="type">T</span>]].runtimeClass</span><br><span class="line">    listeners.asScala.filter(_.getClass == c).map(_.asInstanceOf[<span class="type">T</span>]).toSeq</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>主要依靠<code>CopyOnWriteArrayList</code>保障线程安全，主动发现<code>InterruptedException</code>，而不是被动等待。具体的操作，留给子类实现<code>doPostEvent</code></p>
+<h3 id="ListenerBus的继承体系"><a href="#ListenerBus的继承体系" class="headerlink" title="ListenerBus的继承体系"></a>ListenerBus的继承体系</h3><p><img src="//dydeve.github.io/2019/05/21/spark-event-bus/listener-bus-hierarchy.jpg" alt=""></p>
+<h4 id="SparkListenerBus"><a href="#SparkListenerBus" class="headerlink" title="SparkListenerBus"></a>SparkListenerBus</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">trait</span> <span class="title">SparkListenerBus</span></span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">ListenerBus</span>[<span class="type">SparkListenerInterface</span>, <span class="type">SparkListenerEvent</span>] </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">doPostEvent</span></span>(</span><br><span class="line">      listener: <span class="type">SparkListenerInterface</span>,</span><br><span class="line">      event: <span class="type">SparkListenerEvent</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    event <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> stageSubmitted: <span class="type">SparkListenerStageSubmitted</span> =&gt;</span><br><span class="line">        listener.onStageSubmitted(stageSubmitted)</span><br><span class="line">      <span class="keyword">case</span> stageCompleted: <span class="type">SparkListenerStageCompleted</span> =&gt;</span><br><span class="line">        listener.onStageCompleted(stageCompleted)</span><br><span class="line">      <span class="keyword">case</span> jobStart: <span class="type">SparkListenerJobStart</span> =&gt;</span><br><span class="line">        listener.onJobStart(jobStart)</span><br><span class="line">      ...</span><br><span class="line">      <span class="keyword">case</span> speculativeTaskSubmitted: <span class="type">SparkListenerSpeculativeTaskSubmitted</span> =&gt;</span><br><span class="line">        listener.onSpeculativeTaskSubmitted(speculativeTaskSubmitted)</span><br><span class="line">      <span class="keyword">case</span> _ =&gt; listener.onOtherEvent(event)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>SparkListenerBus</code>根据模式匹配，根据不同的<code>SparkListenerEvent</code>,调用<code>SparkListenerInterface</code>的不同方法.doPostEvents是同步调用的，当调度频繁时，可能导致<code>写入延迟，事件丢失</code></p>
+<h5 id="SparkListenerInterface"><a href="#SparkListenerInterface" class="headerlink" title="SparkListenerInterface"></a>SparkListenerInterface</h5><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">trait</span> <span class="title">SparkListenerInterface</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Called when a stage completes successfully or fails, with information on the completed stage.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">onStageCompleted</span></span>(stageCompleted: <span class="type">SparkListenerStageCompleted</span>): <span class="type">Unit</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Called when a stage is submitted</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">onStageSubmitted</span></span>(stageSubmitted: <span class="type">SparkListenerStageSubmitted</span>): <span class="type">Unit</span></span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>官方建议继承<code>SparkListener</code>or <code>SparkFirehoseListener</code>，而不是直接实现<code>SparkListenerInterface</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//空实现</span></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">SparkListener</span> <span class="keyword">extends</span> <span class="title">SparkListenerInterface</span> </span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onStageCompleted</span></span>(stageCompleted: <span class="type">SparkListenerStageCompleted</span>): <span class="type">Unit</span> = &#123; &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onStageSubmitted</span></span>(stageSubmitted: <span class="type">SparkListenerStageSubmitted</span>): <span class="type">Unit</span> = &#123; &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onTaskStart</span></span>(taskStart: <span class="type">SparkListenerTaskStart</span>): <span class="type">Unit</span> = &#123; &#125;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//子类只需要重写onEvent一个方法即可</span></span><br><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">SparkFirehoseListener</span> <span class="title">implements</span> <span class="title">SparkListenerInterface</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  public void onEvent(<span class="type">SparkListenerEvent</span> event) &#123; &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  public <span class="keyword">final</span> void onStageCompleted(<span class="type">SparkListenerStageCompleted</span> stageCompleted) &#123;</span><br><span class="line">    onEvent(stageCompleted);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  public <span class="keyword">final</span> void onStageSubmitted(<span class="type">SparkListenerStageSubmitted</span> stageSubmitted) &#123;</span><br><span class="line">    onEvent(stageSubmitted);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="SparkListenerEvent"><a href="#SparkListenerEvent" class="headerlink" title="SparkListenerEvent"></a>SparkListenerEvent</h5><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@DeveloperApi</span></span><br><span class="line"><span class="meta">@JsonTypeInfo</span>(use = <span class="type">JsonTypeInfo</span>.<span class="type">Id</span>.<span class="type">CLASS</span>, include = <span class="type">JsonTypeInfo</span>.<span class="type">As</span>.<span class="type">PROPERTY</span>, property = <span class="string">"Event"</span>)</span><br><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">SparkListenerEvent</span> </span>&#123;</span><br><span class="line">  <span class="comment">/* Whether output this event to the event log */</span></span><br><span class="line">  <span class="keyword">protected</span>[spark] <span class="function"><span class="keyword">def</span> <span class="title">logEvent</span></span>: <span class="type">Boolean</span> = <span class="literal">true</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@DeveloperApi</span></span><br><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">SparkListenerStageSubmitted</span>(<span class="params">stageInfo: <span class="type">StageInfo</span>, properties: <span class="type">Properties</span> = null</span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">SparkListenerEvent</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">@DeveloperApi</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">SparkListenerStageCompleted</span>(<span class="params">stageInfo: <span class="type">StageInfo</span></span>) <span class="keyword">extends</span> <span class="title">SparkListenerEvent</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">@DeveloperApi</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">SparkListenerTaskStart</span>(<span class="params">stageId: <span class="type">Int</span>, stageAttemptId: <span class="type">Int</span>, taskInfo: <span class="type">TaskInfo</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">SparkListenerEvent</span></span></span><br><span class="line"><span class="class">...</span></span><br><span class="line"><span class="class">&#125;</span></span><br></pre></td></tr></table></figure>
+<h4 id="AsyncEventQueue"><a href="#AsyncEventQueue" class="headerlink" title="AsyncEventQueue"></a>AsyncEventQueue</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An asynchronous queue for events. All events posted to this queue will be delivered to the child</span></span><br><span class="line"><span class="comment"> * listeners in a separate thread.</span></span><br><span class="line"><span class="comment"> * 所有提交到队列里的事件将在单独的线程里运行</span></span><br><span class="line"><span class="comment"> * Delivery will only begin when the `start()` method is called. The `stop()` method should be</span></span><br><span class="line"><span class="comment"> * called when no more events need to be delivered.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">AsyncEventQueue</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    val name: <span class="type">String</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    conf: <span class="type">SparkConf</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    metrics: <span class="type">LiveListenerBusMetrics</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    bus: <span class="type">LiveListenerBus</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">SparkListenerBus</span></span></span><br><span class="line"><span class="class">  <span class="keyword">with</span> <span class="title">Logging</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">import</span> <span class="type">AsyncEventQueue</span>._</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Cap the capacity of the queue so we get an explicit error (rather than an OOM exception) if</span></span><br><span class="line">  <span class="comment">// it's perpetually being added to more quickly than it's being drained.</span></span><br><span class="line">  <span class="comment">//限定大小，避免OOM。事件先提交到这个队列</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> eventQueue = <span class="keyword">new</span> <span class="type">LinkedBlockingQueue</span>[<span class="type">SparkListenerEvent</span>](</span><br><span class="line">    conf.get(<span class="type">LISTENER_BUS_EVENT_QUEUE_CAPACITY</span>))</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Keep the event count separately, so that waitUntilEmpty() can be implemented properly;</span></span><br><span class="line">  <span class="comment">// this allows that method to return only when the events in the queue have been fully</span></span><br><span class="line">  <span class="comment">// processed (instead of just dequeued).</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> eventCount = <span class="keyword">new</span> <span class="type">AtomicLong</span>()</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** A counter for dropped events. It will be reset every time we log it. */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> droppedEventsCounter = <span class="keyword">new</span> <span class="type">AtomicLong</span>(<span class="number">0</span>L)</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** When `droppedEventsCounter` was logged last time in milliseconds. */</span></span><br><span class="line">  <span class="meta">@volatile</span> <span class="keyword">private</span> <span class="keyword">var</span> lastReportTimestamp = <span class="number">0</span>L</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> logDroppedEvent = <span class="keyword">new</span> <span class="type">AtomicBoolean</span>(<span class="literal">false</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">var</span> sc: <span class="type">SparkContext</span> = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> started = <span class="keyword">new</span> <span class="type">AtomicBoolean</span>(<span class="literal">false</span>)</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> stopped = <span class="keyword">new</span> <span class="type">AtomicBoolean</span>(<span class="literal">false</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> droppedEvents = metrics.metricRegistry.counter(<span class="string">s"queue.<span class="subst">$name</span>.numDroppedEvents"</span>)</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> processingTime = metrics.metricRegistry.timer(<span class="string">s"queue.<span class="subst">$name</span>.listenerProcessingTime"</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Remove the queue size gauge first, in case it was created by a previous incarnation of</span></span><br><span class="line">  <span class="comment">// this queue that was removed from the listener bus.</span></span><br><span class="line">  metrics.metricRegistry.remove(<span class="string">s"queue.<span class="subst">$name</span>.size"</span>)</span><br><span class="line">  metrics.metricRegistry.register(<span class="string">s"queue.<span class="subst">$name</span>.size"</span>, <span class="keyword">new</span> <span class="type">Gauge</span>[<span class="type">Int</span>] &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getValue</span></span>: <span class="type">Int</span> = eventQueue.size()</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> dispatchThread = <span class="keyword">new</span> <span class="type">Thread</span>(<span class="string">s"spark-listener-group-<span class="subst">$name</span>"</span>) &#123;<span class="comment">//dispatch在单独线程里运行</span></span><br><span class="line">    setDaemon(<span class="literal">true</span>)</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">run</span></span>(): <span class="type">Unit</span> = <span class="type">Utils</span>.tryOrStopSparkContext(sc) &#123;<span class="comment">//出了异常，将在新线程里关闭SparkContext</span></span><br><span class="line">      dispatch()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">dispatch</span></span>(): <span class="type">Unit</span> = <span class="type">LiveListenerBus</span>.withinListenerThread.withValue(<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> next: <span class="type">SparkListenerEvent</span> = eventQueue.take()<span class="comment">//阻塞，直到取出元素</span></span><br><span class="line">    <span class="keyword">while</span> (next != <span class="type">POISON_PILL</span>) &#123;<span class="comment">//毒丸，优雅的关闭dispatchThread，类似于akka关闭actor</span></span><br><span class="line">      <span class="keyword">val</span> ctx = processingTime.time()</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.postToAll(next)<span class="comment">//提交任务</span></span><br><span class="line">      &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        ctx.stop()</span><br><span class="line">      &#125;</span><br><span class="line">      eventCount.decrementAndGet()</span><br><span class="line">      next = eventQueue.take()</span><br><span class="line">    &#125;</span><br><span class="line">    eventCount.decrementAndGet()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getTimer</span></span>(listener: <span class="type">SparkListenerInterface</span>): <span class="type">Option</span>[<span class="type">Timer</span>] = &#123;</span><br><span class="line">    metrics.getTimerForListenerClass(listener.getClass.asSubclass(classOf[<span class="type">SparkListenerInterface</span>]))</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Start an asynchronous thread to dispatch events to the underlying listeners.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * @param sc Used to stop the SparkContext in case the async dispatcher fails.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span>[scheduler] <span class="function"><span class="keyword">def</span> <span class="title">start</span></span>(sc: <span class="type">SparkContext</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">if</span> (started.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>)) &#123;</span><br><span class="line">      <span class="keyword">this</span>.sc = sc</span><br><span class="line">      dispatchThread.start()<span class="comment">//线程开始从队列取出事件并提交</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalStateException</span>(<span class="string">s"<span class="subst">$name</span> already started!"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Stop the listener bus. It will wait until the queued events have been processed, but new</span></span><br><span class="line"><span class="comment">   * events will be dropped.</span></span><br><span class="line"><span class="comment">   * 等待已入队的事件被处理，新事件将被丢弃</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span>[scheduler] <span class="function"><span class="keyword">def</span> <span class="title">stop</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">if</span> (!started.get()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalStateException</span>(<span class="string">s"Attempted to stop <span class="subst">$name</span> that has not yet started!"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (stopped.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>)) &#123;</span><br><span class="line">      eventCount.incrementAndGet()</span><br><span class="line">      eventQueue.put(<span class="type">POISON_PILL</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// this thread might be trying to stop itself as part of error handling -- we can't join</span></span><br><span class="line">    <span class="comment">// in that case.</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="type">Thread</span>.currentThread() != dispatchThread) &#123;</span><br><span class="line">      dispatchThread.join()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">post</span></span>(event: <span class="type">SparkListenerEvent</span>): <span class="type">Unit</span> = &#123;<span class="comment">//public方法</span></span><br><span class="line">    <span class="keyword">if</span> (stopped.get()) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    eventCount.incrementAndGet()</span><br><span class="line">    <span class="keyword">if</span> (eventQueue.offer(event)) &#123;<span class="comment">//提交到异步队列，立即返回，不阻塞</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    eventCount.decrementAndGet()</span><br><span class="line">    droppedEvents.inc()</span><br><span class="line">    droppedEventsCounter.incrementAndGet()</span><br><span class="line">    <span class="keyword">if</span> (logDroppedEvent.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>)) &#123;</span><br><span class="line">      <span class="comment">// Only log the following message once to avoid duplicated annoying logs.</span></span><br><span class="line">      logError(<span class="string">s"Dropping event from queue <span class="subst">$name</span>. "</span> +</span><br><span class="line">        <span class="string">"This likely means one of the listeners is too slow and cannot keep up with "</span> +</span><br><span class="line">        <span class="string">"the rate at which tasks are being started by the scheduler."</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    logTrace(<span class="string">s"Dropping event <span class="subst">$event</span>"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> droppedCount = droppedEventsCounter.get</span><br><span class="line">    <span class="keyword">if</span> (droppedCount &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="comment">// Don't log too frequently</span></span><br><span class="line">      <span class="keyword">if</span> (<span class="type">System</span>.currentTimeMillis() - lastReportTimestamp &gt;= <span class="number">60</span> * <span class="number">1000</span>) &#123;<span class="comment">//打印抛弃事件的数量</span></span><br><span class="line">        <span class="comment">// There may be multiple threads trying to decrease droppedEventsCounter.</span></span><br><span class="line">        <span class="comment">// Use "compareAndSet" to make sure only one thread can win.</span></span><br><span class="line">        <span class="comment">// And if another thread is increasing droppedEventsCounter, "compareAndSet" will fail and</span></span><br><span class="line">        <span class="comment">// then that thread will update it.</span></span><br><span class="line">        <span class="keyword">if</span> (droppedEventsCounter.compareAndSet(droppedCount, <span class="number">0</span>)) &#123;</span><br><span class="line">          <span class="keyword">val</span> prevLastReportTimestamp = lastReportTimestamp</span><br><span class="line">          lastReportTimestamp = <span class="type">System</span>.currentTimeMillis()</span><br><span class="line">          <span class="keyword">val</span> previous = <span class="keyword">new</span> java.util.<span class="type">Date</span>(prevLastReportTimestamp)</span><br><span class="line">          logWarning(<span class="string">s"Dropped <span class="subst">$droppedCount</span> events from <span class="subst">$name</span> since <span class="subst">$previous</span>."</span>)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * For testing only. Wait until there are no more events in the queue.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * @return true if the queue is empty.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">waitUntilEmpty</span></span>(deadline: <span class="type">Long</span>): <span class="type">Boolean</span> = &#123;</span><br><span class="line">    <span class="keyword">while</span> (eventCount.get() != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (<span class="type">System</span>.currentTimeMillis &gt; deadline) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="type">Thread</span>.sleep(<span class="number">10</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">removeListenerOnError</span></span>(listener: <span class="type">SparkListenerInterface</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="comment">// the listener failed in an unrecoverably way, we want to remove it from the entire</span></span><br><span class="line">    <span class="comment">// LiveListenerBus (potentially stopping a queue if it is empty)</span></span><br><span class="line">    bus.removeListener(listener)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">object</span> <span class="title">AsyncEventQueue</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> <span class="type">POISON_PILL</span> = <span class="keyword">new</span> <span class="type">SparkListenerEvent</span>() &#123; &#125;<span class="comment">//毒丸，优雅地关闭线程</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>AsyncEventQueue中的<code>dispatch</code>方法，会调用<code>LiveListenerBus#LiveListenerBus.withinListenerThread.withValue</code>方法，removeListenerOnError实际调用<code>LiveListenerBus#removeListener</code>方法。<code>stop</code>方法不会中断线程，会等待线程执行完，但不接受新事件</p>
+<h4 id="LiveListenerBus"><a href="#LiveListenerBus" class="headerlink" title="LiveListenerBus"></a>LiveListenerBus</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * SparkListenerEvents</span></span><br><span class="line"><span class="comment"> * Asynchronously passes SparkListenerEvents to registered SparkListeners.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Until `start()` is called, all posted events are only buffered. Only after this listener bus</span></span><br><span class="line"><span class="comment"> * has started will events be actually propagated to all attached listeners. This listener bus</span></span><br><span class="line"><span class="comment"> * is stopped when `stop()` is called, and it will drop further events after stopping.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">class</span> <span class="title">LiveListenerBus</span>(<span class="params">conf: <span class="type">SparkConf</span></span>) </span>&#123;</span><br><span class="line">...</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 将监听器加到指定的queue(通过队列的名字)</span></span><br><span class="line"><span class="comment">   * Add a listener to a specific queue, creating a new queue if needed. Queues are independent</span></span><br><span class="line"><span class="comment">   * of each other (each one uses a separate thread for delivering events), allowing slower</span></span><br><span class="line"><span class="comment">   * listeners to be somewhat isolated from others.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span>[spark] <span class="function"><span class="keyword">def</span> <span class="title">addToQueue</span></span>(</span><br><span class="line">      listener: <span class="type">SparkListenerInterface</span>,</span><br><span class="line">      queue: <span class="type">String</span>): <span class="type">Unit</span> = synchronized &#123;</span><br><span class="line">    <span class="keyword">if</span> (stopped.get()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalStateException</span>(<span class="string">"LiveListenerBus is stopped."</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    queues.asScala.find(_.name == queue) <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="type">Some</span>(queue) =&gt;</span><br><span class="line">        queue.addListener(listener)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> <span class="type">None</span> =&gt;</span><br><span class="line">        <span class="keyword">val</span> newQueue = <span class="keyword">new</span> <span class="type">AsyncEventQueue</span>(queue, conf, metrics, <span class="keyword">this</span>)</span><br><span class="line">        newQueue.addListener(listener)</span><br><span class="line">        <span class="keyword">if</span> (started.get()) &#123;</span><br><span class="line">          newQueue.start(sparkContext)</span><br><span class="line">        &#125;</span><br><span class="line">        queues.add(newQueue)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">removeListener</span></span>(listener: <span class="type">SparkListenerInterface</span>): <span class="type">Unit</span> = synchronized &#123;</span><br><span class="line">    <span class="comment">// Remove listener from all queues it was added to, and stop queues that have become empty.</span></span><br><span class="line">    queues.asScala</span><br><span class="line">      .filter &#123; queue =&gt;</span><br><span class="line">        queue.removeListener(listener)</span><br><span class="line">        queue.listeners.isEmpty()</span><br><span class="line">      &#125;</span><br><span class="line">      .foreach &#123; toRemove =&gt;</span><br><span class="line">        <span class="keyword">if</span> (started.get() &amp;&amp; !stopped.get()) &#123;</span><br><span class="line">          toRemove.stop()</span><br><span class="line">        &#125;</span><br><span class="line">        queues.remove(toRemove)<span class="comment">//监听器空了的queue要stop，并移除</span></span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Post an event to all queues. */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">post</span></span>(event: <span class="type">SparkListenerEvent</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">if</span> (stopped.get()) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    metrics.numEventsPosted.inc()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If the event buffer is null, it means the bus has been started and we can avoid</span></span><br><span class="line">    <span class="comment">// synchronization and post events directly to the queues. This should be the most</span></span><br><span class="line">    <span class="comment">// common case during the life of the bus.</span></span><br><span class="line">    <span class="keyword">if</span> (queuedEvents == <span class="literal">null</span>) &#123;</span><br><span class="line">      postToQueues(event)</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Otherwise, need to synchronize to check whether the bus is started, to make sure the thread</span></span><br><span class="line">    <span class="comment">// calling start() picks up the new event.</span></span><br><span class="line">    synchronized &#123;</span><br><span class="line">      <span class="keyword">if</span> (!started.get()) &#123;</span><br><span class="line">        queuedEvents += event</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If the bus was already started when the check above was made, just post directly to the</span></span><br><span class="line">    <span class="comment">// queues.</span></span><br><span class="line">    postToQueues(event)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">postToQueues</span></span>(event: <span class="type">SparkListenerEvent</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> it = queues.iterator()</span><br><span class="line">    <span class="keyword">while</span> (it.hasNext()) &#123;</span><br><span class="line">      it.next().post(event)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">object</span> <span class="title">LiveListenerBus</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Allows for Context to check whether stop() call is made within listener thread</span></span><br><span class="line">  <span class="keyword">val</span> withinListenerThread: <span class="type">DynamicVariable</span>[<span class="type">Boolean</span>] = <span class="keyword">new</span> <span class="type">DynamicVariable</span>[<span class="type">Boolean</span>](<span class="literal">false</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[scheduler] <span class="keyword">val</span> <span class="type">SHARED_QUEUE</span> = <span class="string">"shared"</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[scheduler] <span class="keyword">val</span> <span class="type">APP_STATUS_QUEUE</span> = <span class="string">"appStatus"</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[scheduler] <span class="keyword">val</span> <span class="type">EXECUTOR_MANAGEMENT_QUEUE</span> = <span class="string">"executorManagement"</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[scheduler] <span class="keyword">val</span> <span class="type">EVENT_LOG_QUEUE</span> = <span class="string">"eventLog"</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DynamicVariable</span>[<span class="type">T</span>](<span class="params">init: <span class="type">T</span></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> tl = <span class="keyword">new</span> <span class="type">InheritableThreadLocal</span>[<span class="type">T</span>] &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">initialValue</span> </span>= init.asInstanceOf[<span class="type">T</span> <span class="keyword">with</span> <span class="type">AnyRef</span>]</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Retrieve the current value */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">value</span></span>: <span class="type">T</span> = tl.get.asInstanceOf[<span class="type">T</span>]</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Set the value of the variable while executing the specified</span></span><br><span class="line"><span class="comment">    * thunk.</span></span><br><span class="line"><span class="comment">    *</span></span><br><span class="line"><span class="comment">    * @param newval The value to which to set the variable</span></span><br><span class="line"><span class="comment">    * @param thunk The code to evaluate under the new setting</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">withValue</span></span>[<span class="type">S</span>](newval: <span class="type">T</span>)(thunk: =&gt; <span class="type">S</span>): <span class="type">S</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> oldval = value</span><br><span class="line">    tl set newval</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> thunk</span><br><span class="line">    <span class="keyword">finally</span> tl set oldval</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Change the currently bound value, discarding the old value.</span></span><br><span class="line"><span class="comment">    * Usually withValue() gives better semantics.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">value_=</span></span>(newval: <span class="type">T</span>) = tl set newval</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span></span>: <span class="type">String</span> = <span class="string">"DynamicVariable("</span> + value + <span class="string">")"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>withValue</code>里对threadlocal的操作，和 <a href="../../17/spark-withScope-and-clean/">RDD.withScope</a>有异曲同工之妙</p>
+<p>DAGScheduler、SparkContext等都是LiveListenerBus的事件来源，它们都是通过调用LiveListenerBus的post方法将消息交给异步线程listenerThread处理</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spark/" rel="tag"># spark</a>
+          
+            <a href="/tags/big-data/" rel="tag"># big data</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/21/spark-TransportChannelHandler/" rel="next" title="spark-TransportChannelHandler">
+                <i class="fa fa-chevron-left"></i> spark-TransportChannelHandler
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/23/spark-mertric/" rel="prev" title="spark mertric度量">
+                spark mertric度量 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ListenerBus"><span class="nav-number">1.</span> <span class="nav-text">ListenerBus</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ListenerBus的继承体系"><span class="nav-number">2.</span> <span class="nav-text">ListenerBus的继承体系</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SparkListenerBus"><span class="nav-number">2.1.</span> <span class="nav-text">SparkListenerBus</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#SparkListenerInterface"><span class="nav-number">2.1.1.</span> <span class="nav-text">SparkListenerInterface</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SparkListenerEvent"><span class="nav-number">2.1.2.</span> <span class="nav-text">SparkListenerEvent</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AsyncEventQueue"><span class="nav-number">2.2.</span> <span class="nav-text">AsyncEventQueue</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#LiveListenerBus"><span class="nav-number">2.3.</span> <span class="nav-text">LiveListenerBus</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

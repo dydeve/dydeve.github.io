@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="spark,big data,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="spark配置SparkConf是Spark的配置类.1private val settings = new ConcurrentHashMap[String, String]() 配置以[String, String]的形式保存在ConcurrentHashMap中。配置Spark参数有以下三种形式： 1. 系统属性中以&amp;quot;spark.&amp;quot;开头的属性 2. 调用SparkConf">
+<meta name="keywords" content="spark,big data">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark-SparkConf">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/20/spark-SparkConf/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="spark配置SparkConf是Spark的配置类.1private val settings = new ConcurrentHashMap[String, String]() 配置以[String, String]的形式保存在ConcurrentHashMap中。配置Spark参数有以下三种形式： 1. 系统属性中以&amp;quot;spark.&amp;quot;开头的属性 2. 调用SparkConf">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-21T12:01:26.332Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark-SparkConf">
+<meta name="twitter:description" content="spark配置SparkConf是Spark的配置类.1private val settings = new ConcurrentHashMap[String, String]() 配置以[String, String]的形式保存在ConcurrentHashMap中。配置Spark参数有以下三种形式： 1. 系统属性中以&amp;quot;spark.&amp;quot;开头的属性 2. 调用SparkConf">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/20/spark-SparkConf/">
+
+
+
+
+
+  <title>spark-SparkConf | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/20/spark-SparkConf/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark-SparkConf</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-20T09:15:38+08:00">
+                2019-05-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/The-Art-of-Spark-Kernel-Design/" itemprop="url" rel="index">
+                    <span itemprop="name">The Art of Spark Kernel Design</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="spark配置"><a href="#spark配置" class="headerlink" title="spark配置"></a>spark配置</h3><p><code>SparkConf</code>是Spark的配置类.<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> settings = <span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>[<span class="type">String</span>, <span class="type">String</span>]()</span><br></pre></td></tr></table></figure></p>
+<p>配置以[String, String]的形式保存在<code>ConcurrentHashMap</code>中。配置Spark参数有以下三种形式：</p>
+<pre><code>1. 系统属性中以&quot;spark.&quot;开头的属性
+2. 调用SparkConf的api
+3. 从其他SparkConf克隆
+</code></pre><p>其中，直接通过SparkConf设置的属性优先级比系统属性优先级高</p>
+<h4 id="系统属性中以”spark-”开头的属性"><a href="#系统属性中以”spark-”开头的属性" class="headerlink" title="系统属性中以”spark.”开头的属性"></a>系统属性中以”spark.”开头的属性</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SparkConf</span>(<span class="params">loadDefaults: <span class="type">Boolean</span></span>) <span class="keyword">extends</span> <span class="title">Cloneable</span> <span class="keyword">with</span> <span class="title">Logging</span> <span class="keyword">with</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">import</span> <span class="type">SparkConf</span>._</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Create a SparkConf that loads defaults from system properties and the classpath */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>() = <span class="keyword">this</span>(<span class="literal">true</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> settings = <span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>[<span class="type">String</span>, <span class="type">String</span>]()</span><br><span class="line"></span><br><span class="line">  <span class="meta">@transient</span> <span class="keyword">private</span> <span class="keyword">lazy</span> <span class="keyword">val</span> reader: <span class="type">ConfigReader</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> _reader = <span class="keyword">new</span> <span class="type">ConfigReader</span>(<span class="keyword">new</span> <span class="type">SparkConfigProvider</span>(settings))</span><br><span class="line">    _reader.bindEnv(<span class="keyword">new</span> <span class="type">ConfigProvider</span> &#123;</span><br><span class="line">      <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">get</span></span>(key: <span class="type">String</span>): <span class="type">Option</span>[<span class="type">String</span>] = <span class="type">Option</span>(getenv(key))</span><br><span class="line">    &#125;)</span><br><span class="line">    _reader</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (loadDefaults) &#123;</span><br><span class="line">    loadFromSystemProperties(<span class="literal">false</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[spark] <span class="function"><span class="keyword">def</span> <span class="title">loadFromSystemProperties</span></span>(silent: <span class="type">Boolean</span>): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">    <span class="comment">// Load any spark.* system properties</span></span><br><span class="line">    <span class="keyword">for</span> ((key, value) &lt;- <span class="type">Utils</span>.getSystemProperties <span class="keyword">if</span> key.startsWith(<span class="string">"spark."</span>)) &#123;</span><br><span class="line">      set(key, value, silent)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[spark] <span class="function"><span class="keyword">def</span> <span class="title">set</span></span>(key: <span class="type">String</span>, value: <span class="type">String</span>, silent: <span class="type">Boolean</span>): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">    <span class="keyword">if</span> (key == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">NullPointerException</span>(<span class="string">"null key"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (value == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">NullPointerException</span>(<span class="string">"null value for "</span> + key)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!silent) &#123;</span><br><span class="line">      logDeprecationWarning(key)</span><br><span class="line">    &#125;</span><br><span class="line">    settings.put(key, value)</span><br><span class="line">    <span class="keyword">this</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Various utility methods used by Spark.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">object</span> <span class="title">Utils</span> <span class="keyword">extends</span> <span class="title">Logging</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Returns the system properties map that is thread-safe to iterator over. It gets the</span></span><br><span class="line"><span class="comment">   * properties which have been set explicitly, as well as those for which only a default value</span></span><br><span class="line"><span class="comment">   * has been defined.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getSystemProperties</span></span>: <span class="type">Map</span>[<span class="type">String</span>, <span class="type">String</span>] = &#123;</span><br><span class="line">    <span class="type">System</span>.getProperties.stringPropertyNames().asScala</span><br><span class="line">      .map(key =&gt; (key, <span class="type">System</span>.getProperty(key))).toMap</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，<code>loadDefaults</code>参数决定是否使用系统参数中以 <code>spark.</code>开头的属性，并将其保存到settings中。默认是<code>true</code></p>
+<h4 id="直接设置SparkConf"><a href="#直接设置SparkConf" class="headerlink" title="直接设置SparkConf"></a>直接设置SparkConf</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Set a configuration variable. */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">set</span></span>(key: <span class="type">String</span>, value: <span class="type">String</span>): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">  set(key, value, <span class="literal">false</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="function"><span class="keyword">def</span> <span class="title">set</span></span>(key: <span class="type">String</span>, value: <span class="type">String</span>, silent: <span class="type">Boolean</span>): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">  <span class="keyword">if</span> (key == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">NullPointerException</span>(<span class="string">"null key"</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (value == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">NullPointerException</span>(<span class="string">"null value for "</span> + key)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!silent) &#123;</span><br><span class="line">    logDeprecationWarning(key)</span><br><span class="line">  &#125;</span><br><span class="line">  settings.put(key, value)</span><br><span class="line">  <span class="keyword">this</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The master URL to connect to, such as "local" to run locally with one thread, "local[4]" to</span></span><br><span class="line"><span class="comment"> * run locally with 4 cores, or "spark://master:7077" to run on a Spark standalone cluster.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">setMaster</span></span>(master: <span class="type">String</span>): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">  set(<span class="string">"spark.master"</span>, master)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Set a name for your application. Shown in the Spark web UI. */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">setAppName</span></span>(name: <span class="type">String</span>): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">  set(<span class="string">"spark.app.name"</span>, name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Set JAR files to distribute to the cluster. */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">setJars</span></span>(jars: <span class="type">Seq</span>[<span class="type">String</span>]): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">  <span class="keyword">for</span> (jar &lt;- jars <span class="keyword">if</span> (jar == <span class="literal">null</span>)) logWarning(<span class="string">"null jar passed to SparkContext constructor"</span>)</span><br><span class="line">  set(<span class="string">"spark.jars"</span>, jars.filter(_ != <span class="literal">null</span>).mkString(<span class="string">","</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Set JAR files to distribute to the cluster. (Java-friendly version.) */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">setJars</span></span>(jars: <span class="type">Array</span>[<span class="type">String</span>]): <span class="type">SparkConf</span> = &#123;</span><br><span class="line">  setJars(jars.toSeq)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>部分setXxx自动设置了key</p>
+<h4 id="clone"><a href="#clone" class="headerlink" title="clone"></a>clone</h4><p>当spark多个组件共享配置，可以</p>
+<ol>
+<li>把SparkConf变量共享，或通过参数传递给其他组件。但并发下，ConcurrentHashMap性能下降</li>
+<li>使用clone(),优雅，避免复制代码臃肿</li>
+</ol>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Copy this object */</span></span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">clone</span></span>: <span class="type">SparkConf</span> = &#123;</span><br><span class="line">  <span class="keyword">val</span> cloned = <span class="keyword">new</span> <span class="type">SparkConf</span>(<span class="literal">false</span>)<span class="comment">//不使用系统配置，下面的foreach会完全复制配置</span></span><br><span class="line">  settings.entrySet().asScala.foreach &#123; e =&gt;</span><br><span class="line">    cloned.set(e.getKey(), e.getValue(), <span class="literal">true</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  cloned</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spark/" rel="tag"># spark</a>
+          
+            <a href="/tags/big-data/" rel="tag"># big data</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/19/spark-design-concept-basic-architecture/" rel="next" title="spark设计理念和基本架构">
+                <i class="fa fa-chevron-left"></i> spark设计理念和基本架构
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/20/spark-rpc/" rel="prev" title="spark rpc">
+                spark rpc <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#spark配置"><span class="nav-number">1.</span> <span class="nav-text">spark配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#系统属性中以”spark-”开头的属性"><span class="nav-number">1.1.</span> <span class="nav-text">系统属性中以”spark.”开头的属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#直接设置SparkConf"><span class="nav-number">1.2.</span> <span class="nav-text">直接设置SparkConf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#clone"><span class="nav-number">1.3.</span> <span class="nav-text">clone</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

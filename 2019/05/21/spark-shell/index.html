@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="安装spark的流程就不说了。本篇讲述spark-shell log level在$SPARK_HOME/conf目录中，有log4j.properties文件(如果没有 执行cp log4j.properties.template log4j.properties). spark-shell默认日志级别为WARN,修改log4j.properties如下，以打印更详细的信息1234# Set t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark shell">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/21/spark-shell/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="安装spark的流程就不说了。本篇讲述spark-shell log level在$SPARK_HOME/conf目录中，有log4j.properties文件(如果没有 执行cp log4j.properties.template log4j.properties). spark-shell默认日志级别为WARN,修改log4j.properties如下，以打印更详细的信息1234# Set t">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-21T08:21:37.575Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark shell">
+<meta name="twitter:description" content="安装spark的流程就不说了。本篇讲述spark-shell log level在$SPARK_HOME/conf目录中，有log4j.properties文件(如果没有 执行cp log4j.properties.template log4j.properties). spark-shell默认日志级别为WARN,修改log4j.properties如下，以打印更详细的信息1234# Set t">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/21/spark-shell/">
+
+
+
+
+
+  <title>spark shell | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/21/spark-shell/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark shell</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-21T16:21:37+08:00">
+                2019-05-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/The-Art-of-Spark-Kernel-Design/" itemprop="url" rel="index">
+                    <span itemprop="name">The Art of Spark Kernel Design</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>安装spark的流程就不说了。本篇讲述spark-shell</p>
+<h3 id="log-level"><a href="#log-level" class="headerlink" title="log level"></a>log level</h3><p>在$SPARK_HOME/conf目录中，有log4j.properties文件(如果没有 执行<code>cp log4j.properties.template log4j.properties</code>). spark-shell默认日志级别为WARN,修改log4j.properties如下，以打印更详细的信息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># Set the default spark-shell log level to WARN. When running the spark-shell, the</span><br><span class="line"># log level for this class is used to overwrite the root logger&apos;s log level, so that</span><br><span class="line"># the user can have different defaults for the shell and regular Spark apps.</span><br><span class="line">log4j.logger.org.apache.spark.repl.Main=INFO</span><br></pre></td></tr></table></figure></p>
+<h3 id="run-workCount-on-spark-shell"><a href="#run-workCount-on-spark-shell" class="headerlink" title="run workCount on spark-shell"></a>run workCount on spark-shell</h3><p>执行$SPARK_HOME/bin/spark-shell，结果如下<br><figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">(base) joker:spark xmly$ bin/spark-shell</span><br><span class="line">19/05/18 15:39:47 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable</span><br><span class="line">19/05/18 15:39:47 INFO SignalUtils: Registered signal handler for INT</span><br><span class="line">19/05/18 15:39:53 INFO SparkContext: Running Spark version 2.3.1</span><br><span class="line">19/05/18 15:39:53 INFO SparkContext: Submitted application: Spark shell</span><br><span class="line">19/05/18 15:39:53 INFO SecurityManager: Changing view acls to: xmly</span><br><span class="line">19/05/18 15:39:53 INFO SecurityManager: Changing modify acls to: xmly</span><br><span class="line">19/05/18 15:39:53 INFO SecurityManager: Changing view acls groups to:</span><br><span class="line">19/05/18 15:39:53 INFO SecurityManager: Changing modify acls groups to:</span><br><span class="line">19/05/18 15:39:53 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(xmly); groups with view permissions: Set(); users  with modify permissions: Set(xmly); groups with modify permissions: Set()</span><br><span class="line">19/05/18 15:39:54 INFO Utils: Successfully started service 'sparkDriver' on port 57338.</span><br><span class="line">19/05/18 15:39:54 INFO SparkEnv: Registering MapOutputTracker</span><br><span class="line">19/05/18 15:39:54 INFO SparkEnv: Registering BlockManagerMaster</span><br><span class="line">19/05/18 15:39:54 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information</span><br><span class="line">19/05/18 15:39:54 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up</span><br><span class="line">19/05/18 15:39:54 INFO DiskBlockManager: Created local directory at /private/var/folders/sb/7sj8qth16j71x82r2m6ctk8r0000gn/T/blockmgr-fcefbfe5-40a6-4058-9724-c3ee2c701190</span><br><span class="line">19/05/18 15:39:54 INFO MemoryStore: MemoryStore started with capacity 366.3 MB</span><br><span class="line">19/05/18 15:39:54 INFO SparkEnv: Registering OutputCommitCoordinator</span><br><span class="line">19/05/18 15:39:54 INFO Utils: Successfully started service 'SparkUI' on port 4040.</span><br><span class="line">19/05/18 15:39:54 INFO SparkUI: Bound SparkUI to 0.0.0.0, and started at http://192.168.38.95:4040</span><br><span class="line">19/05/18 15:39:55 INFO Executor: Starting executor ID driver on host localhost</span><br><span class="line">19/05/18 15:39:55 INFO Executor: Using REPL class URI: spark://192.168.38.95:57338/classes</span><br><span class="line">19/05/18 15:39:55 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 57339.</span><br><span class="line">19/05/18 15:39:55 INFO NettyBlockTransferService: Server created on 192.168.38.95:57339</span><br><span class="line">19/05/18 15:39:55 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy</span><br><span class="line">19/05/18 15:39:55 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, 192.168.38.95, 57339, None)</span><br><span class="line">19/05/18 15:39:55 INFO BlockManagerMasterEndpoint: Registering block manager 192.168.38.95:57339 with 366.3 MB RAM, BlockManagerId(driver, 192.168.38.95, 57339, None)</span><br><span class="line">19/05/18 15:39:55 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, 192.168.38.95, 57339, None)</span><br><span class="line">19/05/18 15:39:55 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, 192.168.38.95, 57339, None)</span><br><span class="line">19/05/18 15:39:56 INFO EventLoggingListener: Logging events to hdfs://localhost:9000/spark_log/local-1558165194992.lz4</span><br><span class="line">19/05/18 15:39:56 INFO Main: Created Spark session with Hive support</span><br><span class="line">Spark context Web UI available at http://192.168.38.95:4040</span><br><span class="line">Spark context available as 'sc' (master = local[*], app id = local-1558165194992).</span><br><span class="line">Spark session available as 'spark'.</span><br><span class="line">Welcome to</span><br><span class="line">      ____              __</span><br><span class="line">     / __/__  ___ _____/ /__</span><br><span class="line">    _\ \/ _ \/ _ `/ __/  '_/</span><br><span class="line">   /___/ .__/\_,_/_/ /_/\_\   version 2.3.1</span><br><span class="line">      /_/</span><br><span class="line"></span><br><span class="line">Using Scala version 2.11.8 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_171)</span><br><span class="line">Type in expressions to have them evaluated.</span><br><span class="line">Type :help for more information.</span><br><span class="line"></span><br><span class="line"><span class="meta">scala&gt;</span><span class="bash"></span></span><br></pre></td></tr></table></figure></p>
+<p>从启动日志，可看到SparkContext、SecurityManager、SparkEnv、BlockManagerMasterEndpoint、DiskBlockManager、MemoryStore、SparkUI、Executor、NettyBlockTransferService、BlockManager、等</p>
+<p>以下执行workCount<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">scala&gt; :paste</span><br><span class="line"><span class="comment">// Entering paste mode (ctrl-D to finish)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> lines = sc.textFile(<span class="string">"file:///opt/spark/README.md"</span>)</span><br><span class="line"><span class="keyword">val</span> words = lines.flatMap(line =&gt; line.split(<span class="string">" "</span>))</span><br><span class="line"><span class="keyword">val</span> ones = words.map(word =&gt; (word, <span class="number">1</span>))</span><br><span class="line"><span class="keyword">val</span> counts = ones.reduceByKey(_ + _)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Exiting paste mode, now interpreting.</span></span><br><span class="line"></span><br><span class="line"><span class="number">19</span>/<span class="number">05</span>/<span class="number">18</span> <span class="number">16</span>:<span class="number">09</span>:<span class="number">07</span> <span class="type">INFO</span> <span class="type">MemoryStore</span>: <span class="type">Block</span> broadcast_0 stored as values in memory (estimated size <span class="number">241.5</span> <span class="type">KB</span>, free <span class="number">366.1</span> <span class="type">MB</span>)</span><br><span class="line"><span class="number">19</span>/<span class="number">05</span>/<span class="number">18</span> <span class="number">16</span>:<span class="number">09</span>:<span class="number">07</span> <span class="type">INFO</span> <span class="type">MemoryStore</span>: <span class="type">Block</span> broadcast_0_piece0 stored as bytes in memory (estimated size <span class="number">23.3</span> <span class="type">KB</span>, free <span class="number">366.0</span> <span class="type">MB</span>)</span><br><span class="line"><span class="number">19</span>/<span class="number">05</span>/<span class="number">18</span> <span class="number">16</span>:<span class="number">09</span>:<span class="number">07</span> <span class="type">INFO</span> <span class="type">BlockManagerInfo</span>: <span class="type">Added</span> broadcast_0_piece0 in memory on <span class="number">192.168</span><span class="number">.38</span><span class="number">.95</span>:<span class="number">57718</span> (size: <span class="number">23.3</span> <span class="type">KB</span>, free: <span class="number">366.3</span> <span class="type">MB</span>)</span><br><span class="line"><span class="number">19</span>/<span class="number">05</span>/<span class="number">18</span> <span class="number">16</span>:<span class="number">09</span>:<span class="number">07</span> <span class="type">INFO</span> <span class="type">SparkContext</span>: <span class="type">Created</span> broadcast <span class="number">0</span> from textFile at &lt;console&gt;:<span class="number">24</span></span><br><span class="line"><span class="number">19</span>/<span class="number">05</span>/<span class="number">18</span> <span class="number">16</span>:<span class="number">09</span>:<span class="number">07</span> <span class="type">INFO</span> <span class="type">FileInputFormat</span>: <span class="type">Total</span> input paths to process : <span class="number">1</span></span><br><span class="line">lines: org.apache.spark.rdd.<span class="type">RDD</span>[<span class="type">String</span>] = file:<span class="comment">///opt/spark/README.md MapPartitionsRDD[1] at textFile at &lt;console&gt;:24</span></span><br><span class="line">words: org.apache.spark.rdd.<span class="type">RDD</span>[<span class="type">String</span>] = <span class="type">MapPartitionsRDD</span>[<span class="number">2</span>] at flatMap at &lt;console&gt;:<span class="number">25</span></span><br><span class="line">ones: org.apache.spark.rdd.<span class="type">RDD</span>[(<span class="type">String</span>, <span class="type">Int</span>)] = <span class="type">MapPartitionsRDD</span>[<span class="number">3</span>] at map at &lt;console&gt;:<span class="number">26</span></span><br><span class="line">counts: org.apache.spark.rdd.<span class="type">RDD</span>[(<span class="type">String</span>, <span class="type">Int</span>)] = <span class="type">ShuffledRDD</span>[<span class="number">4</span>] at reduceByKey at &lt;console&gt;:<span class="number">27</span></span><br><span class="line"></span><br><span class="line">scala&gt;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到reducyByKey算子将<code>MapPartitionsRDD</code>转变成<code>ShuffledRDD</code></p>
+<p>通过toDebugString可以看到更详细的RDD转换过程<br><figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">scala&gt;</span><span class="bash"> counts.toDebugString</span></span><br><span class="line">res3: String =</span><br><span class="line">(2) ShuffledRDD[4] at reduceByKey at &lt;console&gt;:27 []</span><br><span class="line"> +-(2) MapPartitionsRDD[3] at map at &lt;console&gt;:26 []</span><br><span class="line">    |  MapPartitionsRDD[2] at flatMap at &lt;console&gt;:25 []</span><br><span class="line">    |  file:///opt/spark/README.md MapPartitionsRDD[1] at textFile at &lt;console&gt;:24 []</span><br><span class="line">    |  file:///opt/spark/README.md HadoopRDD[0] at textFile at &lt;console&gt;:24 []</span><br></pre></td></tr></table></figure></p>
+<p>执行action操作<br><figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">scala&gt;</span><span class="bash"> counts.collect()</span></span><br><span class="line">19/05/18 16:13:26 INFO SparkContext: Starting job: collect at &lt;console&gt;:26</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Registering RDD 3 (map at &lt;console&gt;:26)</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Got job 0 (collect at &lt;console&gt;:26) with 2 output partitions</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Final stage: ResultStage 1 (collect at &lt;console&gt;:26)</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Parents of final stage: List(ShuffleMapStage 0)</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Missing parents: List(ShuffleMapStage 0)</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Submitting ShuffleMapStage 0 (MapPartitionsRDD[3] at map at &lt;console&gt;:26), which has no missing parents</span><br><span class="line">19/05/18 16:13:26 INFO MemoryStore: Block broadcast_1 stored as values in memory (estimated size 4.8 KB, free 366.0 MB)</span><br><span class="line">19/05/18 16:13:26 INFO MemoryStore: Block broadcast_1_piece0 stored as bytes in memory (estimated size 2.8 KB, free 366.0 MB)</span><br><span class="line">19/05/18 16:13:26 INFO BlockManagerInfo: Added broadcast_1_piece0 in memory on 192.168.38.95:57718 (size: 2.8 KB, free: 366.3 MB)</span><br><span class="line">19/05/18 16:13:26 INFO SparkContext: Created broadcast 1 from broadcast at DAGScheduler.scala:1039</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Submitting 2 missing tasks from ShuffleMapStage 0 (MapPartitionsRDD[3] at map at &lt;console&gt;:26) (first 15 tasks are for partitions Vector(0, 1))</span><br><span class="line">19/05/18 16:13:26 INFO TaskSchedulerImpl: Adding task set 0.0 with 2 tasks</span><br><span class="line">19/05/18 16:13:26 INFO TaskSetManager: Starting task 0.0 in stage 0.0 (TID 0, localhost, executor driver, partition 0, PROCESS_LOCAL, 7861 bytes)</span><br><span class="line">19/05/18 16:13:26 INFO TaskSetManager: Starting task 1.0 in stage 0.0 (TID 1, localhost, executor driver, partition 1, PROCESS_LOCAL, 7861 bytes)</span><br><span class="line">19/05/18 16:13:26 INFO Executor: Running task 1.0 in stage 0.0 (TID 1)</span><br><span class="line">19/05/18 16:13:26 INFO Executor: Running task 0.0 in stage 0.0 (TID 0)</span><br><span class="line">19/05/18 16:13:26 INFO HadoopRDD: Input split: file:/opt/spark/README.md:0+1904</span><br><span class="line">19/05/18 16:13:26 INFO HadoopRDD: Input split: file:/opt/spark/README.md:1904+1905</span><br><span class="line">19/05/18 16:13:26 INFO Executor: Finished task 1.0 in stage 0.0 (TID 1). 1155 bytes result sent to driver</span><br><span class="line">19/05/18 16:13:26 INFO Executor: Finished task 0.0 in stage 0.0 (TID 0). 1155 bytes result sent to driver</span><br><span class="line">19/05/18 16:13:26 INFO TaskSetManager: Finished task 1.0 in stage 0.0 (TID 1) in 202 ms on localhost (executor driver) (1/2)</span><br><span class="line">19/05/18 16:13:26 INFO TaskSetManager: Finished task 0.0 in stage 0.0 (TID 0) in 223 ms on localhost (executor driver) (2/2)</span><br><span class="line">19/05/18 16:13:26 INFO TaskSchedulerImpl: Removed TaskSet 0.0, whose tasks have all completed, from pool</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: ShuffleMapStage 0 (map at &lt;console&gt;:26) finished in 0.318 s</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: looking for newly runnable stages</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: running: Set()</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: waiting: Set(ResultStage 1)</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: failed: Set()</span><br><span class="line">19/05/18 16:13:26 INFO DAGScheduler: Submitting ResultStage 1 (ShuffledRDD[4] at reduceByKey at &lt;console&gt;:27), which has no missing parents</span><br><span class="line">19/05/18 16:13:26 INFO MemoryStore: Block broadcast_2 stored as values in memory (estimated size 3.2 KB, free 366.0 MB)</span><br><span class="line">19/05/18 16:13:26 INFO MemoryStore: Block broadcast_2_piece0 stored as bytes in memory (estimated size 1978.0 B, free 366.0 MB)</span><br><span class="line">19/05/18 16:13:26 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on 192.168.38.95:57718 (size: 1978.0 B, free: 366.3 MB)</span><br><span class="line">19/05/18 16:13:26 INFO SparkContext: Created broadcast 2 from broadcast at DAGScheduler.scala:1039</span><br><span class="line">19/05/18 16:13:27 INFO DAGScheduler: Submitting 2 missing tasks from ResultStage 1 (ShuffledRDD[4] at reduceByKey at &lt;console&gt;:27) (first 15 tasks are for partitions Vector(0, 1))</span><br><span class="line">19/05/18 16:13:27 INFO TaskSchedulerImpl: Adding task set 1.0 with 2 tasks</span><br><span class="line">19/05/18 16:13:27 INFO TaskSetManager: Starting task 0.0 in stage 1.0 (TID 2, localhost, executor driver, partition 0, ANY, 7649 bytes)</span><br><span class="line">19/05/18 16:13:27 INFO TaskSetManager: Starting task 1.0 in stage 1.0 (TID 3, localhost, executor driver, partition 1, ANY, 7649 bytes)</span><br><span class="line">19/05/18 16:13:27 INFO Executor: Running task 0.0 in stage 1.0 (TID 2)</span><br><span class="line">19/05/18 16:13:27 INFO Executor: Running task 1.0 in stage 1.0 (TID 3)</span><br><span class="line">19/05/18 16:13:27 INFO ShuffleBlockFetcherIterator: Getting 2 non-empty blocks out of 2 blocks</span><br><span class="line">19/05/18 16:13:27 INFO ShuffleBlockFetcherIterator: Getting 2 non-empty blocks out of 2 blocks</span><br><span class="line">19/05/18 16:13:27 INFO ShuffleBlockFetcherIterator: Started 0 remote fetches in 6 ms</span><br><span class="line">19/05/18 16:13:27 INFO ShuffleBlockFetcherIterator: Started 0 remote fetches in 7 ms</span><br><span class="line">19/05/18 16:13:27 INFO Executor: Finished task 0.0 in stage 1.0 (TID 2). 4673 bytes result sent to driver</span><br><span class="line">19/05/18 16:13:27 INFO TaskSetManager: Finished task 0.0 in stage 1.0 (TID 2) in 111 ms on localhost (executor driver) (1/2)</span><br><span class="line">19/05/18 16:13:27 INFO Executor: Finished task 1.0 in stage 1.0 (TID 3). 4539 bytes result sent to driver</span><br><span class="line">19/05/18 16:13:27 INFO TaskSetManager: Finished task 1.0 in stage 1.0 (TID 3) in 117 ms on localhost (executor driver) (2/2)</span><br><span class="line">19/05/18 16:13:27 INFO TaskSchedulerImpl: Removed TaskSet 1.0, whose tasks have all completed, from pool</span><br><span class="line">19/05/18 16:13:27 INFO DAGScheduler: ResultStage 1 (collect at &lt;console&gt;:26) finished in 0.150 s</span><br><span class="line">19/05/18 16:13:27 INFO DAGScheduler: Job 0 finished: collect at &lt;console&gt;:26, took 0.753798 s</span><br><span class="line">res1: Array[(String, Int)] = Array((package,1), (this,1)...)</span><br></pre></td></tr></table></figure></p>
+<p>SparkContext开启job，id是0。</p>
+<p>DAGScheduler划分、提交两个stage。第一个stage为ShuffleMapStage，id为0；第二个stage为ResultStage，id为1</p>
+<p>每个stage都有两个task，因为<code>2 output partitions</code>(line 4)</p>
+<p>TaskSchedulerImpl添加task到task set，Executor执行task</p>
+<h3 id="analyse-spark-shell"><a href="#analyse-spark-shell" class="headerlink" title="analyse spark-shell"></a>analyse spark-shell</h3><p>part of spark-shell<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">function main() &#123;</span><br><span class="line">  if $cygwin; then</span><br><span class="line">    # Workaround for issue involving JLine and Cygwin</span><br><span class="line">    # (see http://sourceforge.net/p/jline/bugs/40/).</span><br><span class="line">    # If you're using the Mintty terminal emulator in Cygwin, may need to set the</span><br><span class="line">    # "Backspace sends ^H" setting in "Keys" section of the Mintty options</span><br><span class="line">    # (see https://github.com/sbt/sbt/issues/562).</span><br><span class="line">    stty -icanon min 1 -echo &gt; /dev/null 2&gt;&amp;1</span><br><span class="line">    export SPARK_SUBMIT_OPTS="$SPARK_SUBMIT_OPTS -Djline.terminal=unix"</span><br><span class="line">    "$&#123;SPARK_HOME&#125;"/bin/spark-submit --class org.apache.spark.repl.Main --name "Spark shell" "$@"</span><br><span class="line">    stty icanon echo &gt; /dev/null 2&gt;&amp;1</span><br><span class="line">  else</span><br><span class="line">    export SPARK_SUBMIT_OPTS</span><br><span class="line">    "$&#123;SPARK_HOME&#125;"/bin/spark-submit --class org.apache.spark.repl.Main --name "Spark shell" "$@"</span><br><span class="line">  fi</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>spark-shell执行了<code>spark-submit</code>脚本</p>
+<p>spark-submit<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">if [ -z "$&#123;SPARK_HOME&#125;" ]; then</span><br><span class="line">  source "$(dirname "$0")"/find-spark-home</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">disable</span> randomized <span class="built_in">hash</span> <span class="keyword">for</span> string <span class="keyword">in</span> Python 3.3+</span></span><br><span class="line">export PYTHONHASHSEED=0</span><br><span class="line"></span><br><span class="line">exec "$&#123;SPARK_HOME&#125;"/bin/spark-class org.apache.spark.deploy.SparkSubmit "$@"</span><br></pre></td></tr></table></figure></p>
+<p>执行<code>spark-class</code></p>
+<p>part of spark-class<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"># <span class="type">Find</span> the java binary</span><br><span class="line"><span class="keyword">if</span> [ -n <span class="string">"$&#123;JAVA_HOME&#125;"</span> ]; then</span><br><span class="line">  <span class="type">RUNNER</span>=<span class="string">"$&#123;JAVA_HOME&#125;/bin/java"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  <span class="keyword">if</span> [ <span class="string">"$(command -v java)"</span> ]; then</span><br><span class="line">    <span class="type">RUNNER</span>=<span class="string">"java"</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    echo <span class="string">"JAVA_HOME is not set"</span> &gt;&amp;<span class="number">2</span></span><br><span class="line">    exit <span class="number">1</span></span><br><span class="line">  fi</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">build_command() &#123;</span><br><span class="line">  <span class="string">"$RUNNER"</span> -<span class="type">Xmx128m</span> -cp <span class="string">"$LAUNCH_CLASSPATH"</span> org.apache.spark.launcher.<span class="type">Main</span> <span class="string">"$@"</span></span><br><span class="line">  printf <span class="string">"%d\0"</span> $?</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># <span class="type">Turn</span> off posix mode since it does not allow process substitution</span><br><span class="line">set +o posix</span><br><span class="line"><span class="type">CMD</span>=()</span><br><span class="line"><span class="keyword">while</span> <span class="type">IFS</span>= read -d '' -r <span class="type">ARG</span>; do</span><br><span class="line">  <span class="type">CMD</span>+=(<span class="string">"$ARG"</span>)</span><br><span class="line">done &lt; &lt;(build_command <span class="string">"$@"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>spark启动以<code>SparkSubmit</code>为主类的JVM进程</p>
+<h3 id="jmx监控"><a href="#jmx监控" class="headerlink" title="jmx监控"></a>jmx监控</h3><p>在spark-shell中找到如下配置:<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> SPARK-4161: scala does not assume use of the java classpath,</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> so we need to add the <span class="string">"-Dscala.usejavacp=true"</span> flag manually. We</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="keyword">do</span> this specifically <span class="keyword">for</span> the Spark shell because the scala REPL</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> has its own class loader, and any additional classpath specified</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> through spark.driver.extraClassPath is not automatically propagated.</span></span><br><span class="line">SPARK_SUBMIT_OPTS="$SPARK_SUBMIT_OPTS -Dscala.usejavacp=true"</span><br></pre></td></tr></table></figure></p>
+<p>修改为<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SPARK_SUBMIT_OPTS="$SPARK_SUBMIT_OPTS -Dscala.usejavacp=true -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=10207 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"</span><br></pre></td></tr></table></figure></p>
+<p>启动<code>jvisualvm</code>，打开本地或全程JMX的<code>org.apache.spark.deploy.SparkSubmit</code>进程,点击”线程”item，点击”main”线程，然后点击”线程Dump“，会dump线程，拖到最下面<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">&quot;main&quot; #1 prio=5 os_prio=31 tid=0x00007f9202000800 nid=0x2503 runnable [0x0000700002997000]</span><br><span class="line">   java.lang.Thread.State: RUNNABLE</span><br><span class="line">        at java.io.FileInputStream.read0(Native Method)</span><br><span class="line">        at java.io.FileInputStream.read(FileInputStream.java:207)</span><br><span class="line">        at jline.internal.NonBlockingInputStream.read(Redefined)</span><br><span class="line">        - locked &lt;0x000000078368fb18&gt; (a jline.internal.NonBlockingInputStream)</span><br><span class="line">        at jline.internal.NonBlockingInputStream.read(Redefined)</span><br><span class="line">        at jline.internal.NonBlockingInputStream.read(Redefined)</span><br><span class="line">        at jline.internal.InputStreamReader.read(InputStreamReader.java:261)</span><br><span class="line">        - locked &lt;0x000000078368fb18&gt; (a jline.internal.NonBlockingInputStream)</span><br><span class="line">        at jline.internal.InputStreamReader.read(InputStreamReader.java:198)</span><br><span class="line">        - locked &lt;0x000000078368fb18&gt; (a jline.internal.NonBlockingInputStream)</span><br><span class="line">        at jline.console.ConsoleReader.readCharacter(ConsoleReader.java:2145)</span><br><span class="line">        at jline.console.ConsoleReader.readLine(ConsoleReader.java:2349)</span><br><span class="line">        at jline.console.ConsoleReader.readLine(ConsoleReader.java:2269)</span><br><span class="line">        at scala.tools.nsc.interpreter.jline.InteractiveReader.readOneLine(JLineReader.scala:57)</span><br><span class="line">        at scala.tools.nsc.interpreter.InteractiveReader$$anonfun$readLine$2.apply(InteractiveReader.scala:37)</span><br><span class="line">        at scala.tools.nsc.interpreter.InteractiveReader$$anonfun$readLine$2.apply(InteractiveReader.scala:37)</span><br><span class="line">        at scala.tools.nsc.interpreter.InteractiveReader$.restartSysCalls(InteractiveReader.scala:44)</span><br><span class="line">        at scala.tools.nsc.interpreter.InteractiveReader$class.readLine(InteractiveReader.scala:37)</span><br><span class="line">        at scala.tools.nsc.interpreter.jline.InteractiveReader.readLine(JLineReader.scala:28)</span><br><span class="line">        at scala.tools.nsc.interpreter.ILoop.readOneLine(ILoop.scala:404)</span><br><span class="line">        at scala.tools.nsc.interpreter.ILoop.loop(ILoop.scala:413)</span><br><span class="line">        at scala.tools.nsc.interpreter.ILoop$$anonfun$process$1.apply$mcZ$sp(ILoop.scala:923)</span><br><span class="line">        at scala.tools.nsc.interpreter.ILoop$$anonfun$process$1.apply(ILoop.scala:909)</span><br><span class="line">        at scala.tools.nsc.interpreter.ILoop$$anonfun$process$1.apply(ILoop.scala:909)</span><br><span class="line">        at scala.reflect.internal.util.ScalaClassLoader$.savingContextLoader(ScalaClassLoader.scala:97)</span><br><span class="line">        at scala.tools.nsc.interpreter.ILoop.process(ILoop.scala:909)</span><br><span class="line">        at org.apache.spark.repl.Main$.doMain(Main.scala:76)</span><br><span class="line">        at org.apache.spark.repl.Main$.main(Main.scala:56)</span><br><span class="line">        at org.apache.spark.repl.Main.main(Main.scala)</span><br><span class="line">        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</span><br><span class="line">        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)</span><br><span class="line">        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)</span><br><span class="line">        at java.lang.reflect.Method.invoke(Redefined)</span><br><span class="line">        at org.apache.spark.deploy.JavaMainApplication.start(Redefined)</span><br><span class="line">        at org.apache.spark.deploy.SparkSubmit$.org$apache$spark$deploy$SparkSubmit$$runMain(Redefined)</span><br><span class="line">        at org.apache.spark.deploy.SparkSubmit$.doRunMain$1(Redefined)</span><br><span class="line">        at org.apache.spark.deploy.SparkSubmit$.submit(Redefined)</span><br><span class="line">        at org.apache.spark.deploy.SparkSubmit$.main(Redefined)</span><br><span class="line">        at org.apache.spark.deploy.SparkSubmit.main(Redefined)</span><br></pre></td></tr></table></figure></p>
+<p>可以看出函数调用顺序:<br>SparkSubmit.main —&gt; Main.main —&gt; ILoop.process</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/21/spark-initializePipeline/" rel="next" title="spark-initializePipeline">
+                <i class="fa fa-chevron-left"></i> spark-initializePipeline
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/21/spark-RpcHandler/" rel="prev" title="spark-RpcHandler">
+                spark-RpcHandler <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#log-level"><span class="nav-number">1.</span> <span class="nav-text">log level</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#run-workCount-on-spark-shell"><span class="nav-number">2.</span> <span class="nav-text">run workCount on spark-shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#analyse-spark-shell"><span class="nav-number">3.</span> <span class="nav-text">analyse spark-shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jmx监控"><span class="nav-number">4.</span> <span class="nav-text">jmx监控</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

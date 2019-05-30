@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="TransportConf源码的解释为：A central location that tracks all the settings we expose to users.追踪所有暴露给用户的配置。在SparkContext中，用于给RPC框架提供配置信息 TransportConf有两个属性：  ConfigProvider conf：配置提供者 String module：模块  12345">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark-TransportConf详解">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/21/spark-TransportConf/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="TransportConf源码的解释为：A central location that tracks all the settings we expose to users.追踪所有暴露给用户的配置。在SparkContext中，用于给RPC框架提供配置信息 TransportConf有两个属性：  ConfigProvider conf：配置提供者 String module：模块  12345">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-21T07:20:23.968Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark-TransportConf详解">
+<meta name="twitter:description" content="TransportConf源码的解释为：A central location that tracks all the settings we expose to users.追踪所有暴露给用户的配置。在SparkContext中，用于给RPC框架提供配置信息 TransportConf有两个属性：  ConfigProvider conf：配置提供者 String module：模块  12345">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/21/spark-TransportConf/">
+
+
+
+
+
+  <title>spark-TransportConf详解 | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/21/spark-TransportConf/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark-TransportConf详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-21T14:43:52+08:00">
+                2019-05-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/The-Art-of-Spark-Kernel-Design/" itemprop="url" rel="index">
+                    <span itemprop="name">The Art of Spark Kernel Design</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><code>TransportConf</code>源码的解释为：A central location that tracks all the settings we expose to users.追踪所有暴露给用户的配置。在SparkContext中，用于给RPC框架提供配置信息</p>
+<p><code>TransportConf</code>有两个属性：</p>
+<ol>
+<li>ConfigProvider conf：配置提供者</li>
+<li>String module：模块</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Provides a mechanism for constructing a &#123;<span class="doctag">@link</span> TransportConf&#125; using some sort of configuration.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ConfigProvider</span> </span>&#123;</span><br><span class="line">  <span class="comment">/** Obtains the value of the given config, throws NoSuchElementException if it doesn't exist. */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> String <span class="title">get</span><span class="params">(String name)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Returns all the config values in the provider. */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">abstract</span> Iterable&lt;Map.Entry&lt;String, String&gt;&gt; getAll();</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(String name, String defaultValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> get(name);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoSuchElementException e) &#123;</span><br><span class="line">      <span class="keyword">return</span> defaultValue;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getInt</span><span class="params">(String name, <span class="keyword">int</span> defaultValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Integer.parseInt(get(name, Integer.toString(defaultValue)));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getLong</span><span class="params">(String name, <span class="keyword">long</span> defaultValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Long.parseLong(get(name, Long.toString(defaultValue)));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">getDouble</span><span class="params">(String name, <span class="keyword">double</span> defaultValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Double.parseDouble(get(name, Double.toString(defaultValue)));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">getBoolean</span><span class="params">(String name, <span class="keyword">boolean</span> defaultValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Boolean.parseBoolean(get(name, Boolean.toString(defaultValue)));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ConfigProvider比较简单.<code>MapConfigProvider</code>是它的实现<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MapConfigProvider</span> <span class="keyword">extends</span> <span class="title">ConfigProvider</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> MapConfigProvider EMPTY = <span class="keyword">new</span> MapConfigProvider(Collections.emptyMap());</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, String&gt; config;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">MapConfigProvider</span><span class="params">(Map&lt;String, String&gt; config)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.config = <span class="keyword">new</span> HashMap&lt;&gt;(config);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    String value = config.get(name);</span><br><span class="line">    <span class="keyword">if</span> (value == <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException(name);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> value;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(String name, String defaultValue)</span> </span>&#123;</span><br><span class="line">    String value = config.get(name);</span><br><span class="line">    <span class="keyword">return</span> value == <span class="keyword">null</span> ? defaultValue : value;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Iterable&lt;Map.Entry&lt;String, String&gt;&gt; getAll() &#123;</span><br><span class="line">    <span class="keyword">return</span> config.entrySet();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransportConf</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> String SPARK_NETWORK_IO_MODE_KEY;</span><br><span class="line">  </span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ConfigProvider conf;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> String <span class="keyword">module</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">TransportConf</span><span class="params">(String <span class="keyword">module</span>, ConfigProvider conf)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.<span class="keyword">module</span> = <span class="keyword">module</span>;</span><br><span class="line">    <span class="keyword">this</span>.conf = conf;</span><br><span class="line">    SPARK_NETWORK_IO_MODE_KEY = getConfKey(<span class="string">"io.mode"</span>);</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getInt</span><span class="params">(String name, <span class="keyword">int</span> defaultValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> conf.getInt(name, defaultValue);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(String name, String defaultValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> conf.get(name, defaultValue);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> String <span class="title">getConfKey</span><span class="params">(String suffix)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"spark."</span> + <span class="keyword">module</span> + <span class="string">"."</span> + suffix;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getModuleName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">module</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** IO mode: nio or epoll */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">ioMode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> conf.get(SPARK_NETWORK_IO_MODE_KEY, <span class="string">"NIO"</span>).toUpperCase(Locale.ROOT);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出，”spark.” + module + “.suffix”就得到了key，用conf.getXxx(key)得到具体value(个人感觉这是鸡肋，没什么太大作用)。</p>
+<p>spark通常使用<code>SparkTransportConf</code>创建<code>TransportConf</code><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Provides a utility for transforming from a SparkConf inside a Spark JVM (e.g., Executor,</span></span><br><span class="line"><span class="comment"> * Driver, or a standalone shuffle service) into a TransportConf with details on our environment</span></span><br><span class="line"><span class="comment"> * like the number of cores that are allocated to this JVM.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">object SparkTransportConf &#123;</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Specifies an upper bound on the number of Netty threads that Spark requires by default.</span></span><br><span class="line"><span class="comment">   * In practice, only 2-4 cores should be required to transfer roughly 10 Gb/s, and each core</span></span><br><span class="line"><span class="comment">   * that we use will have an initial overhead of roughly 32 MB of off-heap memory, which comes</span></span><br><span class="line"><span class="comment">   * at a premium.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * Thus, this value should still retain maximum throughput and reduce wasted off-heap memory</span></span><br><span class="line"><span class="comment">   * allocation. It can be overridden by setting the number of serverThreads and clientThreads</span></span><br><span class="line"><span class="comment">   * manually in Spark's configuration.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> val MAX_DEFAULT_NETTY_THREADS = <span class="number">8</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Utility for creating a [[TransportConf]] from a [[SparkConf]].</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> _conf the [[SparkConf]]</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> module the module name</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> numUsableCores if nonzero, this will restrict the server and client threads to only</span></span><br><span class="line"><span class="comment">   *                       use the given number of cores, rather than all of the machine's cores.</span></span><br><span class="line"><span class="comment">   *                       This restriction will only occur if these properties are not already set.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function">def <span class="title">fromSparkConf</span><span class="params">(_conf: SparkConf, <span class="keyword">module</span>: String, numUsableCores: Int = <span class="number">0</span>)</span>: TransportConf </span>= &#123;</span><br><span class="line">    val conf = _conf.clone</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Specify thread configuration based on our JVM's allocation of cores (rather than necessarily</span></span><br><span class="line">    <span class="comment">// assuming we have all the machine's cores).</span></span><br><span class="line">    <span class="comment">// NB: Only set if serverThreads/clientThreads not already set.</span></span><br><span class="line">    val numThreads = defaultNumThreads(numUsableCores)</span><br><span class="line">    conf.setIfMissing(s<span class="string">"spark.$module.io.serverThreads"</span>, numThreads.toString)</span><br><span class="line">    conf.setIfMissing(s<span class="string">"spark.$module.io.clientThreads"</span>, numThreads.toString)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">new</span> TransportConf(<span class="keyword">module</span>, <span class="keyword">new</span> ConfigProvider &#123;</span><br><span class="line">      <span class="function">override def <span class="title">get</span><span class="params">(name: String)</span>: String </span>= conf.get(name)</span><br><span class="line">      <span class="function">override def <span class="title">get</span><span class="params">(name: String, defaultValue: String)</span>: String </span>= conf.get(name, defaultValue)</span><br><span class="line">      <span class="function">override def <span class="title">getAll</span><span class="params">()</span>: java.lang.Iterable[java.util.Map.Entry[String, String]] </span>= &#123;</span><br><span class="line">        conf.getAll.toMap.asJava.entrySet()</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Returns the default number of threads for both the Netty client and server thread pools.</span></span><br><span class="line"><span class="comment">   * If numUsableCores is 0, we will use Runtime get an approximate number of available cores.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> def <span class="title">defaultNumThreads</span><span class="params">(numUsableCores: Int)</span>: Int </span>= &#123;</span><br><span class="line">    val availableCores =</span><br><span class="line">      <span class="keyword">if</span> (numUsableCores &gt; <span class="number">0</span>) numUsableCores <span class="keyword">else</span> Runtime.getRuntime.availableProcessors()</span><br><span class="line">    math.min(availableCores, MAX_DEFAULT_NETTY_THREADS)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>重点有两个：</p>
+<ol>
+<li>如果 numUsableCores &lt;= 0，那么线程数是系统可用处理器的数量，但是系统的cores不可能全部用于网络传输使用，所以这里还将分配给网络传输的内核数量最多限制在8个</li>
+</ol>
+<p>最终确认线程数的，以SparkConf的配置优先:<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">conf.setIfMissing(<span class="string">s"spark.<span class="subst">$module</span>.io.serverThreads"</span>, numThreads.toString)</span><br><span class="line">conf.setIfMissing(<span class="string">s"spark.<span class="subst">$module</span>.io.clientThreads"</span>, numThreads.toString)</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li>构造一个ConfigProvider的匿名内部类，get的实现实际是代理了<code>SparkConf</code>的get方法</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/21/spark-TransportServer/" rel="next" title="spark-TransportServer">
+                <i class="fa fa-chevron-left"></i> spark-TransportServer
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/21/spark-TransportClientFactory/" rel="prev" title="spark-TransportClientFactory详解">
+                spark-TransportClientFactory详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

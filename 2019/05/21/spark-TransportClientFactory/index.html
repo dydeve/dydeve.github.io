@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="TransportClientFactory TransportClientFactory是创建TransportClient的工厂类  构造方法 123456789101112131415161718192021public TransportClientFactory(    TransportContext context,    List&amp;lt;TransportClientBootstr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark-TransportClientFactory详解">
+<meta property="og:url" content="https://dydeve.github.io/2019/05/21/spark-TransportClientFactory/index.html">
+<meta property="og:site_name" content="dydeve的博客">
+<meta property="og:description" content="TransportClientFactory TransportClientFactory是创建TransportClient的工厂类  构造方法 123456789101112131415161718192021public TransportClientFactory(    TransportContext context,    List&amp;lt;TransportClientBootstr">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-21T07:20:29.019Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark-TransportClientFactory详解">
+<meta name="twitter:description" content="TransportClientFactory TransportClientFactory是创建TransportClient的工厂类  构造方法 123456789101112131415161718192021public TransportClientFactory(    TransportContext context,    List&amp;lt;TransportClientBootstr">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dydeve.github.io/2019/05/21/spark-TransportClientFactory/">
+
+
+
+
+
+  <title>spark-TransportClientFactory详解 | dydeve的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dydeve的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随便写写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dydeve.github.io/2019/05/21/spark-TransportClientFactory/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="duyu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dydeve的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark-TransportClientFactory详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-21T14:43:52+08:00">
+                2019-05-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/spark/The-Art-of-Spark-Kernel-Design/" itemprop="url" rel="index">
+                    <span itemprop="name">The Art of Spark Kernel Design</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="TransportClientFactory"><a href="#TransportClientFactory" class="headerlink" title="TransportClientFactory"></a>TransportClientFactory</h3><p> <code>TransportClientFactory</code>是创建<code>TransportClient</code>的工厂类</p>
+<p> 构造方法<br> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">TransportClientFactory</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    TransportContext context,</span></span></span><br><span class="line"><span class="function"><span class="params">    List&lt;TransportClientBootstrap&gt; clientBootstraps)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>.context = Preconditions.checkNotNull(context);</span><br><span class="line">  <span class="keyword">this</span>.conf = context.getConf();</span><br><span class="line">  <span class="keyword">this</span>.clientBootstraps = Lists.newArrayList(Preconditions.checkNotNull(clientBootstraps));</span><br><span class="line">  <span class="keyword">this</span>.connectionPool = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line">  <span class="keyword">this</span>.numConnectionsPerPeer = conf.numConnectionsPerPeer();</span><br><span class="line">  <span class="keyword">this</span>.rand = <span class="keyword">new</span> Random();</span><br><span class="line"></span><br><span class="line">  IOMode ioMode = IOMode.valueOf(conf.ioMode());</span><br><span class="line">  <span class="keyword">this</span>.socketChannelClass = NettyUtils.getClientChannelClass(ioMode);</span><br><span class="line">  <span class="keyword">this</span>.workerGroup = NettyUtils.createEventLoop(</span><br><span class="line">      ioMode,</span><br><span class="line">      conf.clientThreads(),</span><br><span class="line">      conf.getModuleName() + <span class="string">"-client"</span>);</span><br><span class="line">  <span class="keyword">this</span>.pooledAllocator = NettyUtils.createPooledByteBufAllocator(</span><br><span class="line">    conf.preferDirectBufs(), <span class="keyword">false</span> <span class="comment">/* allowCache */</span>, conf.clientThreads());</span><br><span class="line">  <span class="keyword">this</span>.metrics = <span class="keyword">new</span> NettyMemoryMetrics(</span><br><span class="line">    <span class="keyword">this</span>.pooledAllocator, conf.getModuleName() + <span class="string">"-client"</span>, conf);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>TransportClientBootstrap：A bootstrap which is executed on a TransportClient before it is returned to the user.</p>
+<p>connectionPool： ConcurrentHashMap&lt;SocketAddress, ClientPool&gt;,ClientPool[TransportClient[] clients, Object[] locks]</p>
+<p>rand: <code>createClient(String remoteHost, int remotePort)</code>中，用于从<code>clientPool.clients</code>中获取<code>TransportClient cachedClient</code>，负载均衡</p>
+<p>numConnectionsPerPeer：Number of concurrent connections between two nodes for fetching data.用于构造<code>connectionPool.putIfAbsent(unresolvedAddress, new ClientPool(numConnectionsPerPeer))</code>。</p>
+<p>ioMode：从conf中获取，有<code>NIO, EPOLL</code>两种。NIO总是可用，EPOLL只可用于Linux</p>
+<p>workerGroup：根据Netty的规范，客户端只有worker组.有<code>NioEventLoopGroup</code>、<code>EpollEventLoopGroup</code>两种情况</p>
+<p>pooledAllocator：汇集ByteBuf但对本地线程缓存禁用的分配器</p>
+<h3 id="TransportClientBootstrap-客户端引导程序"><a href="#TransportClientBootstrap-客户端引导程序" class="headerlink" title="TransportClientBootstrap 客户端引导程序"></a>TransportClientBootstrap 客户端引导程序</h3><p>在<code>TransportClient</code>返回用户前，做一些操作。可以做一些昂贵操作，因为<code>TransportClient</code>会尽可能重用<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * A bootstrap which is executed on a TransportClient before it is returned to the user.</span></span><br><span class="line"><span class="comment"> * This enables an initial exchange of information (e.g., SASL authentication tokens) on a once-per-</span></span><br><span class="line"><span class="comment"> * connection basis.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Since connections (and TransportClients) are reused as much as possible, it is generally</span></span><br><span class="line"><span class="comment"> * reasonable to perform an expensive bootstrapping operation, as they often share a lifespan with</span></span><br><span class="line"><span class="comment"> * the JVM itself.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TransportClientBootstrap</span> </span>&#123;</span><br><span class="line">  <span class="comment">/** Performs the bootstrapping operation, throwing an exception on failure. */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">doBootstrap</span><span class="params">(TransportClient client, Channel channel)</span> <span class="keyword">throws</span> RuntimeException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>TransportClientFactory#createClient</code><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Factory for creating &#123;<span class="doctag">@link</span> TransportClient&#125;s by using createClient.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * The factory maintains a connection pool to other hosts and should return the same</span></span><br><span class="line"><span class="comment"> * TransportClient for the same remote host. It also shares a single worker thread pool for</span></span><br><span class="line"><span class="comment"> * all TransportClients.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * TransportClients will be reused whenever possible. Prior to completing the creation of a new</span></span><br><span class="line"><span class="comment"> * TransportClient, all given &#123;<span class="doctag">@link</span> TransportClientBootstrap&#125;s will be run.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransportClientFactory</span> <span class="keyword">implements</span> <span class="title">Closeable</span> </span>&#123;</span><br><span class="line">  <span class="comment">/** Create a completely new &#123;<span class="doctag">@link</span> TransportClient&#125; to the remote address. */</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> TransportClient <span class="title">createClient</span><span class="params">(InetSocketAddress address)</span></span></span><br><span class="line"><span class="function">      <span class="keyword">throws</span> IOException, InterruptedException </span>&#123;</span><br><span class="line">    logger.debug(<span class="string">"Creating new connection to &#123;&#125;"</span>, address);</span><br><span class="line">    <span class="comment">//构建根引导程序Bootstrap，并对其配置</span></span><br><span class="line">    Bootstrap bootstrap = <span class="keyword">new</span> Bootstrap();</span><br><span class="line">    bootstrap.group(workerGroup)</span><br><span class="line">      .channel(socketChannelClass)</span><br><span class="line">      <span class="comment">// Disable Nagle's Algorithm since we don't want packets to wait</span></span><br><span class="line">      .option(ChannelOption.TCP_NODELAY, <span class="keyword">true</span>)</span><br><span class="line">      .option(ChannelOption.SO_KEEPALIVE, <span class="keyword">true</span>)</span><br><span class="line">      .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, conf.connectionTimeoutMs())</span><br><span class="line">      .option(ChannelOption.ALLOCATOR, pooledAllocator);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (conf.receiveBuf() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      bootstrap.option(ChannelOption.SO_RCVBUF, conf.receiveBuf());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (conf.sendBuf() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      bootstrap.option(ChannelOption.SO_SNDBUF, conf.sendBuf());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> AtomicReference&lt;TransportClient&gt; clientRef = <span class="keyword">new</span> AtomicReference&lt;&gt;();</span><br><span class="line">    <span class="keyword">final</span> AtomicReference&lt;Channel&gt; channelRef = <span class="keyword">new</span> AtomicReference&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//为根引导程序设置管道初始化回调函数</span></span><br><span class="line">    bootstrap.handler(<span class="keyword">new</span> ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> </span>&#123;</span><br><span class="line">        TransportChannelHandler clientHandler = context.initializePipeline(ch);</span><br><span class="line">        clientRef.set(clientHandler.getClient());</span><br><span class="line">        channelRef.set(ch);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Connect to the remote server</span></span><br><span class="line">    <span class="keyword">long</span> preConnect = System.nanoTime();</span><br><span class="line">    ChannelFuture cf = bootstrap.connect(address);</span><br><span class="line">    <span class="keyword">if</span> (!cf.await(conf.connectionTimeoutMs())) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(</span><br><span class="line">        String.format(<span class="string">"Connecting to %s timed out (%s ms)"</span>, address, conf.connectionTimeoutMs()));</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (cf.cause() != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(String.format(<span class="string">"Failed to connect to %s"</span>, address), cf.cause());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    TransportClient client = clientRef.get();</span><br><span class="line">    Channel channel = channelRef.get();</span><br><span class="line">    <span class="keyword">assert</span> client != <span class="keyword">null</span> : <span class="string">"Channel future completed successfully with null client"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Execute any client bootstraps synchronously before marking the Client as successful.</span></span><br><span class="line">    <span class="keyword">long</span> preBootstrap = System.nanoTime();</span><br><span class="line">    logger.debug(<span class="string">"Connection to &#123;&#125; successful, running bootstraps..."</span>, address);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">for</span> (TransportClientBootstrap clientBootstrap : clientBootstraps) &#123;</span><br><span class="line">        clientBootstrap.doBootstrap(client, channel);<span class="comment">//客户单引导程序</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123; <span class="comment">// catch non-RuntimeExceptions too as bootstrap may be written in Scala</span></span><br><span class="line">      <span class="keyword">long</span> bootstrapTimeMs = (System.nanoTime() - preBootstrap) / <span class="number">1000000</span>;</span><br><span class="line">      logger.error(<span class="string">"Exception while bootstrapping client after "</span> + bootstrapTimeMs + <span class="string">" ms"</span>, e);</span><br><span class="line">      client.close();</span><br><span class="line">      <span class="keyword">throw</span> Throwables.propagate(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">long</span> postBootstrap = System.nanoTime();</span><br><span class="line"></span><br><span class="line">    logger.info(<span class="string">"Successfully created connection to &#123;&#125; after &#123;&#125; ms (&#123;&#125; ms spent in bootstraps)"</span>,</span><br><span class="line">      address, (postBootstrap - preConnect) / <span class="number">1000000</span>, (postBootstrap - preBootstrap) / <span class="number">1000000</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> client;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>return client之前，在for循环里<code>clientBootstrap.doBootstrap(client, channel)</code>。这是个private方法，在其他两处被调用</p>
+<h3 id="创建rpc客户端-TransportClient"><a href="#创建rpc客户端-TransportClient" class="headerlink" title="创建rpc客户端 TransportClient"></a>创建rpc客户端 TransportClient</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create a &#123;<span class="doctag">@link</span> TransportClient&#125; connecting to the given remote host / port.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * We maintains an array of clients (size determined by spark.shuffle.io.numConnectionsPerPeer)</span></span><br><span class="line"><span class="comment"> * and randomly picks one to use. If no client was previously created in the randomly selected</span></span><br><span class="line"><span class="comment"> * spot, this function creates a new client and places it there.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Prior to the creation of a new TransportClient, we will execute all</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@link</span> TransportClientBootstrap&#125;s that are registered with this factory.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * This blocks until a connection is successfully established and fully bootstrapped.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Concurrency: This method is safe to call from multiple threads.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> TransportClient <span class="title">createClient</span><span class="params">(String remoteHost, <span class="keyword">int</span> remotePort)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> IOException, InterruptedException </span>&#123;</span><br><span class="line">  <span class="comment">// Get connection from the connection pool first.</span></span><br><span class="line">  <span class="comment">// If it is not found or not active, create a new one.</span></span><br><span class="line">  <span class="comment">// Use unresolved address here to avoid DNS resolution each time we creates a client.</span></span><br><span class="line">  <span class="keyword">final</span> InetSocketAddress unresolvedAddress =</span><br><span class="line">    InetSocketAddress.createUnresolved(remoteHost, remotePort);<span class="comment">//避免dns解析</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// Create the ClientPool if we don't have it yet.只创建ClientPool，不创建TransportClient</span></span><br><span class="line">  ClientPool clientPool = connectionPool.get(unresolvedAddress);</span><br><span class="line">  <span class="keyword">if</span> (clientPool == <span class="keyword">null</span>) &#123;</span><br><span class="line">    connectionPool.putIfAbsent(unresolvedAddress, <span class="keyword">new</span> ClientPool(numConnectionsPerPeer));</span><br><span class="line">    clientPool = connectionPool.get(unresolvedAddress);<span class="comment">//并发安全</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">int</span> clientIndex = rand.nextInt(numConnectionsPerPeer);</span><br><span class="line">  TransportClient cachedClient = clientPool.clients[clientIndex];<span class="comment">//随机选、负载均衡</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (cachedClient != <span class="keyword">null</span> &amp;&amp; cachedClient.isActive()) &#123;<span class="comment">//ClientPool里有TransportClient</span></span><br><span class="line">    <span class="comment">// Make sure that the channel will not timeout by updating the last use time of the</span></span><br><span class="line">    <span class="comment">// handler. Then check that the client is still alive, in case it timed out before</span></span><br><span class="line">    <span class="comment">// this code was able to update things.</span></span><br><span class="line">    TransportChannelHandler handler = cachedClient.getChannel().pipeline()</span><br><span class="line">      .get(TransportChannelHandler.class);</span><br><span class="line">    <span class="keyword">synchronized</span> (handler) &#123;</span><br><span class="line">      handler.getResponseHandler().updateTimeOfLastRequest();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (cachedClient.isActive()) &#123;</span><br><span class="line">      logger.trace(<span class="string">"Returning cached connection to &#123;&#125;: &#123;&#125;"</span>,</span><br><span class="line">        cachedClient.getSocketAddress(), cachedClient);</span><br><span class="line">      <span class="keyword">return</span> cachedClient;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// If we reach here, we don't have an existing connection open. Let's create a new one.</span></span><br><span class="line">  <span class="comment">// Multiple threads might race here to create new connections. Keep only one of them active.</span></span><br><span class="line">  <span class="keyword">final</span> <span class="keyword">long</span> preResolveHost = System.nanoTime();</span><br><span class="line">  <span class="keyword">final</span> InetSocketAddress resolvedAddress = <span class="keyword">new</span> InetSocketAddress(remoteHost, remotePort);<span class="comment">//会有dns解析</span></span><br><span class="line">  <span class="keyword">final</span> <span class="keyword">long</span> hostResolveTimeMs = (System.nanoTime() - preResolveHost) / <span class="number">1000000</span>;</span><br><span class="line">  <span class="keyword">if</span> (hostResolveTimeMs &gt; <span class="number">2000</span>) &#123;</span><br><span class="line">    logger.warn(<span class="string">"DNS resolution for &#123;&#125; took &#123;&#125; ms"</span>, resolvedAddress, hostResolveTimeMs);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    logger.trace(<span class="string">"DNS resolution for &#123;&#125; took &#123;&#125; ms"</span>, resolvedAddress, hostResolveTimeMs);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">synchronized</span> (clientPool.locks[clientIndex]) &#123;<span class="comment">//锁分段</span></span><br><span class="line">    cachedClient = clientPool.clients[clientIndex];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (cachedClient != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (cachedClient.isActive()) &#123;<span class="comment">//双重检验</span></span><br><span class="line">        logger.trace(<span class="string">"Returning cached connection to &#123;&#125;: &#123;&#125;"</span>, resolvedAddress, cachedClient);</span><br><span class="line">        <span class="keyword">return</span> cachedClient;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        logger.info(<span class="string">"Found inactive connection to &#123;&#125;, creating a new one."</span>, resolvedAddress);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    clientPool.clients[clientIndex] = createClient(resolvedAddress);</span><br><span class="line">    <span class="keyword">return</span> clientPool.clients[clientIndex];<span class="comment">//调用上面的私有方法</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 直接创建、不从缓存取</span></span><br><span class="line"><span class="comment"> * Create a completely new &#123;<span class="doctag">@link</span> TransportClient&#125; to the given remote host / port.</span></span><br><span class="line"><span class="comment"> * This connection is not pooled.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * As with &#123;<span class="doctag">@link</span> #createClient(String, int)&#125;, this method is blocking.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> TransportClient <span class="title">createUnmanagedClient</span><span class="params">(String remoteHost, <span class="keyword">int</span> remotePort)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> IOException, InterruptedException </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> InetSocketAddress address = <span class="keyword">new</span> InetSocketAddress(remoteHost, remotePort);</span><br><span class="line">  <span class="keyword">return</span> createClient(address);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InetSocketAddress</span></span></span><br><span class="line"><span class="class">    <span class="keyword">extends</span> <span class="title">SocketAddress</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">// Private implementation class pointed to by all public methods.</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">InetSocketAddressHolder</span> </span>&#123;</span><br><span class="line">        <span class="comment">// The hostname of the Socket Address</span></span><br><span class="line">        <span class="keyword">private</span> String hostname;</span><br><span class="line">        <span class="comment">// The IP address of the Socket Address</span></span><br><span class="line">        <span class="keyword">private</span> InetAddress addr;</span><br><span class="line">        <span class="comment">// The port number of the Socket Address</span></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> port;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isUnresolved</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> addr == <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object obj)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (obj == <span class="keyword">null</span> || !(obj <span class="keyword">instanceof</span> InetSocketAddressHolder))</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            InetSocketAddressHolder that = (InetSocketAddressHolder)obj;</span><br><span class="line">            <span class="keyword">boolean</span> sameIP;</span><br><span class="line">            <span class="keyword">if</span> (addr != <span class="keyword">null</span>)</span><br><span class="line">                sameIP = addr.equals(that.addr);</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (hostname != <span class="keyword">null</span>)</span><br><span class="line">                sameIP = (that.addr == <span class="keyword">null</span>) &amp;&amp;</span><br><span class="line">                    hostname.equalsIgnoreCase(that.hostname);</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                sameIP = (that.addr == <span class="keyword">null</span>) &amp;&amp; (that.hostname == <span class="keyword">null</span>);</span><br><span class="line">            <span class="keyword">return</span> sameIP &amp;&amp; (port == that.port);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (addr != <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">return</span> addr.hashCode() + port;</span><br><span class="line">            <span class="keyword">if</span> (hostname != <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">return</span> hostname.toLowerCase().hashCode() + port;</span><br><span class="line">            <span class="keyword">return</span> port;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">transient</span> InetSocketAddressHolder holder;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">InetSocketAddress</span><span class="params">(String hostname, <span class="keyword">int</span> port)</span> </span>&#123;</span><br><span class="line">        checkHost(hostname);</span><br><span class="line">        InetAddress addr = <span class="keyword">null</span>;</span><br><span class="line">        String host = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            addr = InetAddress.getByName(hostname);<span class="comment">//DNS解析</span></span><br><span class="line">        &#125; <span class="keyword">catch</span>(UnknownHostException e) &#123;</span><br><span class="line">            host = hostname;</span><br><span class="line">        &#125;</span><br><span class="line">        holder = <span class="keyword">new</span> InetSocketAddressHolder(host, addr, checkPort(port));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// private constructor for creating unresolved instances</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">InetSocketAddress</span><span class="params">(<span class="keyword">int</span> port, String hostname)</span> </span>&#123;</span><br><span class="line">        holder = <span class="keyword">new</span> InetSocketAddressHolder(hostname, <span class="keyword">null</span>, port);<span class="comment">//无dns解析</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> InetSocketAddress <span class="title">createUnresolved</span><span class="params">(String host, <span class="keyword">int</span> port)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> InetSocketAddress(checkPort(port), checkHost(host));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns a hashcode for this socket address.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span>  a hash code value for this socket address.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> holder.hashCode();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/21/spark-TransportConf/" rel="next" title="spark-TransportConf详解">
+                <i class="fa fa-chevron-left"></i> spark-TransportConf详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/21/spark-initializePipeline/" rel="prev" title="spark-initializePipeline">
+                spark-initializePipeline <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">duyu</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TransportClientFactory"><span class="nav-number">1.</span> <span class="nav-text">TransportClientFactory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TransportClientBootstrap-客户端引导程序"><span class="nav-number">2.</span> <span class="nav-text">TransportClientBootstrap 客户端引导程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建rpc客户端-TransportClient"><span class="nav-number">3.</span> <span class="nav-text">创建rpc客户端 TransportClient</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">duyu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
